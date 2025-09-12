@@ -1,14 +1,14 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { useTrafficData } from '../hooks/useApi';
-import { TrafficData } from '../types';
+import { useParkingData } from '../hooks/useApi';
+import { ParkingData } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
-import TrafficDataTable from './TrafficDataTable';
+import ParkingDataTable from './ParkingDataTable';
 
 interface TrafficDashboardProps {
   selectedDate?: string;
-  csvData?: TrafficData[];
+  csvData?: ParkingData[];
   isUsingCsv?: boolean;
   startDate?: string;
   endDate?: string;
@@ -17,7 +17,7 @@ interface TrafficDashboardProps {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ 
+const ParkingDashboard: React.FC<ParkingDashboardProps> = ({ 
   selectedDate, 
   csvData, 
   isUsingCsv,
@@ -25,7 +25,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   endDate,
   isRangeMode 
 }) => {
-  const { data, loading, error } = useTrafficData(
+  const { data, loading, error } = useParkingData(
     selectedDate, 
     csvData, 
     isUsingCsv,
@@ -35,10 +35,10 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   );
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+  if (error) return <ErrorMessage message={`駐車場データの取得に失敗しました: ${error}`} />;
   if (!data || data.length === 0) {
     return <ErrorMessage message={
-      isRangeMode ? "選択した期間の交通データがありません" : "選択した日付の交通データがありません"
+      isRangeMode ? "選択した期間の駐車場データがありません" : "選択した日付の駐車場データがありません"
     } />;
   }
 
@@ -168,9 +168,9 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
 
                 strokeWidth={timeSeriesData.length > 50 ? 2 : 3}
-      <TrafficDataTable data={data} className="mt-8" />
+      <ParkingDataTable data={data} className="mt-8" />
     </div>
   );
 };
 
-export default TrafficDashboard;
+export default ParkingDashboard;
