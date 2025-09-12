@@ -85,7 +85,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
       sortable: true,
       render: (value: number) => (
         <div className="text-center">
-          <span className="text-lg font-semibold text-gray-900">{value.toFixed(1)}</span>
+          <span className="text-lg font-semibold text-gray-900">{value ? value.toFixed(1) : '0.0'}</span>
           <span className="text-sm text-gray-500 ml-1">km/h</span>
         </div>
       )
