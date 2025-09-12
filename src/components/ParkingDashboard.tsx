@@ -1,12 +1,12 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import { useParkingData } from '../hooks/useApi';
 import { ParkingData } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ParkingDataTable from './ParkingDataTable';
 
-interface TrafficDashboardProps {
+interface ParkingDashboardProps {
   selectedDate?: string;
   csvData?: ParkingData[];
   isUsingCsv?: boolean;
@@ -17,7 +17,7 @@ interface TrafficDashboardProps {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-const ParkingDashboard: React.FC<TrafficDashboardProps> = ({ 
+const ParkingDashboard: React.FC<ParkingDashboardProps> = ({ 
   selectedDate, 
   csvData, 
   isUsingCsv,
@@ -105,69 +105,68 @@ const ParkingDashboard: React.FC<TrafficDashboardProps> = ({
             </span>
           )}
         </h3>
-        <div className={`${timeSeriesData.length > 50 ? 'h-96' : 'h-80'}`}>
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={timeSeriesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="time" 
-                tick={{ fontSize: 12 }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                interval={timeSeriesData.length > 50 ? Math.floor(timeSeriesData.length / 10) : 0}
-              />
-              <YAxis 
-                yAxisId="left" 
-                tick={{ fontSize: 12 }}
-                label={{ value: '台数', angle: -90, position: 'insideLeft' }}
-              />
-              <YAxis 
-                yAxisId="right" 
-                orientation="right" 
-                tick={{ fontSize: 12 }}
-                label={{ value: '満車率 (%)', angle: 90, position: 'insideRight' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
-              />
-              <Legend />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="entry"
-                stroke="#3B82F6"
-                strokeWidth={timeSeriesData.length > 50 ? 2 : 3}
-                name="入庫数"
-                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="exit"
-                stroke="#10B981"
-                strokeWidth={timeSeriesData.length > 50 ? 2 : 3}
-                name="出庫数"
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2 }}
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="occupancy"
-                stroke="#F59E0B"
-                strokeWidth={timeSeriesData.length > 50 ? 2 : 3}
-                name="満車率 (%)"
-                dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#F59E0B', strokeWidth: 2 }}
-              />
-            </LineChart>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="time" 
+              tick={{ fontSize: 12 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis 
+              yAxisId="left" 
+              tick={{ fontSize: 12 }}
+              label={{ value: '台数', angle: -90, position: 'insideLeft' }}
+            />
+            <YAxis 
+              yAxisId="right" 
+              orientation="right" 
+              tick={{ fontSize: 12 }}
+              label={{ value: '満車率 (%)', angle: 90, position: 'insideRight' }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'white', 
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+            <Legend />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="entry"
+              stroke="#3B82F6"
+              strokeWidth={3}
+              name="入庫数"
+              dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="exit"
+              stroke="#10B981"
+              strokeWidth={3}
+              name="出庫数"
+              dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2 }}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="occupancy"
+              stroke="#F59E0B"
+              strokeWidth={3}
+              name="満車率 (%)"
+              dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: '#F59E0B', strokeWidth: 2 }}
+            />
+          </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
@@ -216,32 +215,32 @@ const ParkingDashboard: React.FC<TrafficDashboardProps> = ({
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <Pie
-                  data={regionPieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                  outerRadius="80%"
-                  innerRadius="40%"
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {regionPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-              </PieChart>
+              <Pie
+                data={regionPieData}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                outerRadius="80%"
+                innerRadius="40%"
+                fill="#8884d8"
+                dataKey="value"
+                stroke="#fff"
+                strokeWidth={2}
+              >
+                {regionPieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px'
+                }}
+              />
+              <Legend />
+            </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -252,31 +251,31 @@ const ParkingDashboard: React.FC<TrafficDashboardProps> = ({
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stayDurationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="hour" 
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  label={{ value: '滞在時間 (分)', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip 
-                  formatter={(value) => [`${value}分`, '平均滞在時間']}
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Bar 
-                  dataKey="avgDuration" 
-                  fill="#3B82F6" 
-                  radius={[4, 4, 0, 0]}
-                  stroke="#2563EB"
-                  strokeWidth={1}
-                />
-              </BarChart>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="hour" 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                label={{ value: '滞在時間 (分)', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip 
+                formatter={(value) => [`${value}分`, '平均滞在時間']}
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar 
+                dataKey="avgDuration" 
+                fill="#3B82F6" 
+                radius={[4, 4, 0, 0]}
+                stroke="#2563EB"
+                strokeWidth={1}
+              />
+            </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
