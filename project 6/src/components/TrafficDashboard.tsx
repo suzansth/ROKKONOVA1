@@ -81,7 +81,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     // --- 単日表示 ---
     timeSeriesData = data.map(item => ({
       time: item.timestamp.split(' ')[1],
-      count: item.vehicle_count,
+      count: item.total_vehicle_count,
       speed: item.avg_speed,
     }));
   }
