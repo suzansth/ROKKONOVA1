@@ -59,7 +59,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         if (!grouped[day]) {
           grouped[day] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
         }
-        grouped[day].totalCount += item.vehicle_count;   // 通過台数は合計
+        grouped[day].totalCount += item.total_vehicle_count;   // 通過台数は合計
         grouped[day].totalSpeed += item.avg_speed;       // 平均速度は後で平均化
         grouped[day].entryCount += 1;
       });
