@@ -157,7 +157,7 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">駐車場データ詳細</h3>
         <p className="text-sm text-gray-600 mt-1">
-          時系列順に並んだ駐車場データの詳細情報です。列ヘッダーをクリックしてソートできます。
+          1時間ごとに集計された駐車場データの詳細情報です。列ヘッダーをクリックしてソートできます。
         </p>
       </div>
       <DataTable data={dataWithUsage} columns={columns} itemsPerPage={15} />

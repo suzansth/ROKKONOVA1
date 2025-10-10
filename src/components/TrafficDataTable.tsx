@@ -108,7 +108,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">交通量データ詳細</h3>
         <p className="text-sm text-gray-600 mt-1">
-          時系列順に並んだ交通量データの詳細情報です。列ヘッダーをクリックしてソートできます。
+          1時間ごとに集計された交通量データの詳細情報です。列ヘッダーをクリックしてソートできます。
         </p>
       </div>
       <DataTable data={data} columns={columns} itemsPerPage={15} />

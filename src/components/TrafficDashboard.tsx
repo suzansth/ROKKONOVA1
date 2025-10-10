@@ -71,13 +71,35 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   }));
 
   // ★ 期間モードかつ 3日以上の範囲なら日ごとに集計
-  if (isRangeMode && startDate && endDate) {
-    const diffDays = 
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24);
+  // 1時間ごとにデータを集計する関数
+  const aggregateHourlyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
 
-    if (diffDays >= 3) {
-      timeSeriesData = aggregateDailyData(data);
-    }
+    data.forEach(item => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00'; // HH:00 形式
+      if (!grouped[hour]) {
+        grouped[hour] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
+      }
+      grouped[hour].totalCount += item.vehicle_count;
+      grouped[hour].totalSpeed += item.avg_speed;
+      grouped[hour].entryCount += 1;
+    });
+
+    return Object.entries(grouped)
+      .map(([hour, values]) => ({
+        time: hour,
+        count: values.totalCount,
+        speed: Math.round(values.totalSpeed / values.entryCount * 10) / 10, // 小数点1桁
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time)); // 時間順にソート
+  };
+
+  // 日ごとにデータを集計する関数
+  const aggregateDailyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+
+    // --- 単日表示: 1時間ごとに集計 ---
+    timeSeriesData = aggregateHourlyData(data);
   }
 
   const vehicleTypeData = data.reduce((acc, item) => {
@@ -131,6 +153,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                formatter={(value, name) => {
+                  if (name === '平均速度 (km/h)') {
+                    return [`${value} km/h`, name];
+                  }
+                  return [`${value}台`, name];
                 }}
               />
               <Legend />
