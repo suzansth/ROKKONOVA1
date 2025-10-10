@@ -42,63 +42,23 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     } />;
   }
 
-  // ★ 追加: 1日ごとに集計する関数
-  const aggregateDailyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { totalCount: number; totalSpeed: number; records: number }> = {};
-
-    data.forEach(item => {
-      const date = item.timestamp.split(' ')[0]; // 日付部分
-      if (!grouped[date]) {
-        grouped[date] = { totalCount: 0, totalSpeed: 0, records: 0 };
-      }
-      grouped[date].totalCount += item.vehicle_count;
-      grouped[date].totalSpeed += item.avg_speed;
-      grouped[date].records += 1;
-    });
-
-    return Object.entries(grouped).map(([date, { totalCount, totalSpeed, records }]) => ({
-      time: date,
-      count: Math.round(totalCount / records), // 1日の平均台数
-      speed: Math.round(totalSpeed / records), // 1日の平均速度
-    }));
-  };
-
   // ---- Process data for charts ----
-  let timeSeriesData = data.map(item => ({
-    time: isRangeMode ? item.timestamp.split(' ')[0] : item.timestamp.split(' ')[1], // 範囲モードなら日付、それ以外は時刻
-    count: item.vehicle_count,
-    speed: item.avg_speed,
-  }));
+  let timeSeriesData;
 
-  // ★ 期間モードかつ 3日以上の範囲なら日ごとに集計
-  // 1時間ごとにデータを集計する関数
-  const aggregateHourlyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+  if (isRangeMode && startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-    data.forEach(item => {
-      const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00'; // HH:00 形式
-      if (!grouped[hour]) {
-        grouped[hour] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
-      }
-      grouped[hour].totalCount += item.vehicle_count;
-      grouped[hour].totalSpeed += item.avg_speed;
-      grouped[hour].entryCount += 1;
-    });
-
-    return Object.entries(grouped)
-      .map(([hour, values]) => ({
-        time: hour,
-        count: values.totalCount,
-        speed: Math.round(values.totalSpeed / values.entryCount * 10) / 10, // 小数点1桁
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time)); // 時間順にソート
-  };
-
-  // 日ごとにデータを集計する関数
-  const aggregateDailyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
-
-    // --- 単日表示: 1時間ごとに集計 ---
+    if (daysDiff >= 3) {
+      // 3日以上の期間: 日ごとに集計
+      timeSeriesData = aggregateDailyData(data);
+    } else {
+      // 3日未満の期間: 1時間ごとに集計
+      timeSeriesData = aggregateHourlyData(data);
+    }
+  } else {
+    // 単日表示: 1時間ごとに集計
     timeSeriesData = aggregateHourlyData(data);
   }
 
