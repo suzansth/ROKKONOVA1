@@ -25,6 +25,57 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   endDate,
   isRangeMode 
 }) => {
+  // 1時間ごとにデータを集計する関数
+  const aggregateHourlyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+    
+    data.forEach(item => {
+      const hour = new Date(item.timestamp).getHours();
+      const timeKey = `${hour.toString().padStart(2, '0')}:00`;
+      
+      if (!grouped[timeKey]) {
+        grouped[timeKey] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
+      }
+      
+      grouped[timeKey].totalCount += item.vehicle_count;
+      grouped[timeKey].totalSpeed += item.average_speed;
+      grouped[timeKey].entryCount += 1;
+    });
+    
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.totalCount,
+        speed: Math.round(data.totalSpeed / data.entryCount * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
+  // 日ごとにデータを集計する関数
+  const aggregateDailyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+    
+    data.forEach(item => {
+      const date = new Date(item.timestamp).toISOString().split('T')[0];
+      
+      if (!grouped[date]) {
+        grouped[date] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
+      }
+      
+      grouped[date].totalCount += item.vehicle_count;
+      grouped[date].totalSpeed += item.average_speed;
+      grouped[date].entryCount += 1;
+    });
+    
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.totalCount,
+        speed: Math.round(data.totalSpeed / data.entryCount * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
   const { data, loading, error } = useTrafficData(
     selectedDate, 
     csvData, 
