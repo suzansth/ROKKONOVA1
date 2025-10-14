@@ -44,50 +44,56 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 
   // 1時間ごとにデータを集計する関数
   const aggregateHourlyData = (data: ParkingData[]) => {
-    const grouped: Record<string, { entry: number; exit: number; occupancy: number; count: number }> = {};
+    const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
 
     data.forEach(item => {
       const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00'; // HH:00 形式
       if (!grouped[hour]) {
-        grouped[hour] = { entry: 0, exit: 0, occupancy: 0, count: 0 };
+        grouped[hour] = { entry: 0, exit: 0, total: 0 };
       }
-      grouped[hour].entry += item.entry_count;
-      grouped[hour].exit += item.exit_count;
-      grouped[hour].occupancy += item.occupancy_rate * 100;
-      grouped[hour].count += 1;
+      
+      if (item.direction === 'in') {
+        grouped[hour].entry += 1;
+      } else if (item.direction === 'out') {
+        grouped[hour].exit += 1;
+      }
+      grouped[hour].total += 1;
     });
 
     return Object.entries(grouped)
       .map(([hour, values]) => ({
         time: hour,
-        entry: Math.round(values.entry / values.count),
-        exit: Math.round(values.exit / values.count),
-        occupancy: Math.round(values.occupancy / values.count * 10) / 10, // 小数点1桁
+        entry: values.entry,
+        exit: values.exit,
+        occupancy: values.total > 0 ? Math.round((values.entry - values.exit) / values.total * 100) : 0,
       }))
       .sort((a, b) => a.time.localeCompare(b.time)); // 時間順にソート
   };
 
   // 日ごとにデータを集計する関数
   const aggregateDailyData = (data: ParkingData[]) => {
-    const grouped: Record<string, { entry: number; exit: number; occupancy: number; count: number }> = {};
+    const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
 
     data.forEach(item => {
       const date = item.timestamp.split(' ')[0];
       if (!grouped[date]) {
-        grouped[date] = { entry: 0, exit: 0, occupancy: 0, count: 0 };
+        grouped[date] = { entry: 0, exit: 0, total: 0 };
       }
-      grouped[date].entry += item.entry_count;
-      grouped[date].exit += item.exit_count;
-      grouped[date].occupancy += item.occupancy_rate * 100;
-      grouped[date].count += 1;
+      
+      if (item.direction === 'in') {
+        grouped[date].entry += 1;
+      } else if (item.direction === 'out') {
+        grouped[date].exit += 1;
+      }
+      grouped[date].total += 1;
     });
 
     return Object.entries(grouped)
       .map(([date, values]) => ({
         time: date,
-        entry: Math.round(values.entry / values.count),
-        exit: Math.round(values.exit / values.count),
-        occupancy: Math.round(values.occupancy / values.count * 10) / 10,
+        entry: values.entry,
+        exit: values.exit,
+        occupancy: values.total > 0 ? Math.round((values.entry - values.exit) / values.total * 100) : 0,
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
@@ -131,30 +137,41 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   // --------------------------
   // 地域別データ
   // --------------------------
-  const regionData = data.reduce((acc, item) => {
-    acc[item.plate_region] = (acc[item.plate_region] || 0) + 1;
+  const cityData = data.reduce((acc, item) => {
+    acc[item.city] = (acc[item.city] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const regionPieData = Object.entries(regionData).map(([region, count]) => ({
-    name: region,
+  const cityPieData = Object.entries(cityData).map(([city, count]) => ({
+    name: city,
     value: count,
   }));
 
   // --------------------------
   // 時間帯別滞在時間
   // --------------------------
-  const hourlyStayData = data.reduce((acc, item) => {
+  const vehicleTypeData = data.reduce((acc, item) => {
+    acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const vehicleTypePieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
+    name: type === 'car' ? '乗用車' : type,
+    value: count,
+  }));
+
+  // エンジンサイズ別データ
+  const engineSizeData = data.reduce((acc, item) => {
     const hour = item.timestamp.split(' ')[1].split(':')[0];
-    if (!acc[hour]) acc[hour] = { hour, totalDuration: 0, count: 0 };
-    acc[hour].totalDuration += item.stay_duration;
+    if (!acc[hour]) acc[hour] = { hour, totalEngineSize: 0, count: 0 };
+    acc[hour].totalEngineSize += item.engine_size;
     acc[hour].count += 1;
     return acc;
-  }, {} as Record<string, { hour: string; totalDuration: number; count: number }>);
+  }, {} as Record<string, { hour: string; totalEngineSize: number; count: number }>);
 
-  const stayDurationData = Object.values(hourlyStayData).map(item => ({
+  const engineSizeChartData = Object.values(engineSizeData).map(item => ({
     hour: `${item.hour}:00`,
-    avgDuration: Math.round(item.totalDuration / item.count),
+    avgEngineSize: Math.round(item.totalEngineSize / item.count),
   }));
 
   return (

@@ -160,7 +160,7 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
           1時間ごとに集計された駐車場データの詳細情報です。列ヘッダーをクリックしてソートできます。
         </p>
       </div>
-      <DataTable data={dataWithUsage} columns={columns} itemsPerPage={15} />
+      <DataTable data={data} columns={columns} itemsPerPage={15} />
     </div>
   );
 };

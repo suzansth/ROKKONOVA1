@@ -27,51 +27,51 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 }) => {
   // 1時間ごとにデータを集計する関数
   const aggregateHourlyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
     
     data.forEach(item => {
-      const hour = new Date(item.timestamp).getHours();
+      const hour = item.timestamp.split(' ')[1].split(':')[0];
       const timeKey = `${hour.toString().padStart(2, '0')}:00`;
       
       if (!grouped[timeKey]) {
-        grouped[timeKey] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
+        grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
       }
       
-      grouped[timeKey].totalCount += item.vehicle_count;
-      grouped[timeKey].totalSpeed += item.average_speed;
-      grouped[timeKey].entryCount += 1;
+      grouped[timeKey].vehicleCount += 1; // 各レコードは1台の車両
+      grouped[timeKey].totalSpeed += item.speed_kmh;
+      grouped[timeKey].speedCount += 1;
     });
     
     return Object.entries(grouped)
       .map(([time, data]) => ({
         time,
-        count: data.totalCount,
-        speed: Math.round(data.totalSpeed / data.entryCount * 10) / 10
+        count: data.vehicleCount,
+        speed: Math.round(data.totalSpeed / data.speedCount * 10) / 10
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
   // 日ごとにデータを集計する関数
   const aggregateDailyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
     
     data.forEach(item => {
-      const date = new Date(item.timestamp).toISOString().split('T')[0];
+      const date = item.timestamp.split(' ')[0];
       
       if (!grouped[date]) {
-        grouped[date] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
+        grouped[date] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
       }
       
-      grouped[date].totalCount += item.vehicle_count;
-      grouped[date].totalSpeed += item.average_speed;
-      grouped[date].entryCount += 1;
+      grouped[date].vehicleCount += 1; // 各レコードは1台の車両
+      grouped[date].totalSpeed += item.speed_kmh;
+      grouped[date].speedCount += 1;
     });
     
     return Object.entries(grouped)
       .map(([time, data]) => ({
         time,
-        count: data.totalCount,
-        speed: Math.round(data.totalSpeed / data.entryCount * 10) / 10
+        count: data.vehicleCount,
+        speed: Math.round(data.totalSpeed / data.speedCount * 10) / 10
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
@@ -114,12 +114,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   }
 
   const vehicleTypeData = data.reduce((acc, item) => {
-    acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + item.vehicle_count;
+    acc[item.class_name] = (acc[item.class_name] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
-    name: type === 'car' ? '乗用車' : type === 'truck' ? 'トラック' : type === 'motorcycle' ? 'バイク' : type,
+    name: type === 'car' ? '乗用車' : type === 'truck' ? 'トラック' : type === 'bus' ? 'バス' : type,
     value: count,
   }));
 

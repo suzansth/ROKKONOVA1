@@ -15,7 +15,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
         return <Car className="w-4 h-4 text-blue-600" />;
       case 'truck':
         return <Truck className="w-4 h-4 text-green-600" />;
-      case 'motorcycle':
+      case 'bus':
         return <Bike className="w-4 h-4 text-orange-600" />;
       default:
         return <Car className="w-4 h-4 text-gray-600" />;
@@ -26,7 +26,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
     const labels: Record<string, string> = {
       car: '乗用車',
       truck: 'トラック',
-      motorcycle: 'バイク'
+      bus: 'バス'
     };
     return labels[type] || type;
   };
@@ -69,35 +69,48 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
       )
     },
     {
-      key: 'vehicle_count',
-      label: '通過台数',
+      key: 'object_id',
+      label: 'ID',
       sortable: true,
       render: (value: number) => (
         <div className="text-center">
-          <span className="text-lg font-semibold text-gray-900">{value}</span>
-          <span className="text-sm text-gray-500 ml-1">台</span>
+          <span className="text-sm font-medium text-gray-900">#{value}</span>
         </div>
       )
     },
     {
-      key: 'avg_speed',
-      label: '平均速度',
-      sortable: true,
-      render: (value: number) => (
-        <div className="text-center">
-          <span className="text-lg font-semibold text-gray-900">{value.toFixed(1)}</span>
-          <span className="text-sm text-gray-500 ml-1">km/h</span>
-        </div>
-      )
-    },
-    {
-      key: 'vehicle_type',
+      key: 'class_name',
       label: '車種',
       sortable: true,
       render: (value: string) => (
         <div className="flex items-center space-x-2">
           {getVehicleIcon(value)}
           <span className="font-medium">{getVehicleTypeLabel(value)}</span>
+        </div>
+      )
+    },
+    {
+      key: 'direction',
+      label: '方向',
+      sortable: true,
+      render: (value: string) => (
+        <div className="text-center">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value === 'R' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+          }`}>
+            {value === 'R' ? '右' : '左'}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'speed_kmh',
+      label: '通過台数',
+      sortable: true,
+      render: (value: number) => (
+        <div className="text-center">
+          <span className="text-lg font-semibold text-gray-900">{value.toFixed(1)}</span>
+          <span className="text-sm text-gray-500 ml-1">km/h</span>
         </div>
       )
     }
