@@ -42,13 +42,51 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     } />;
   }
 
-  // Process data for charts
-  const timeSeriesData = data.map(item => ({
-    time: isRangeMode ? item.timestamp.split(' ')[0] : item.timestamp.split(' ')[1], // Show date for range mode
-    count: item.vehicle_count,
-    speed: item.avg_speed,
-  }));
+  // ====== 時系列データの処理 ======
+  let timeSeriesData;
 
+  if (isRangeMode && startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dayDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (dayDiff >= 3) {
+      // --- 3日以上: 日ごとに集計 ---
+      const grouped: Record<string, { totalCount: number; totalSpeed: number; entryCount: number }> = {};
+
+      data.forEach(item => {
+        const day = item.timestamp.split(' ')[0];
+        if (!grouped[day]) {
+          grouped[day] = { totalCount: 0, totalSpeed: 0, entryCount: 0 };
+        }
+        grouped[day].totalCount += item.total_vehicle_count;   // 通過台数は合計
+        grouped[day].totalSpeed += item.avg_speed;       // 平均速度は後で平均化
+        grouped[day].entryCount += 1;
+      });
+
+      timeSeriesData = Object.entries(grouped).map(([day, values]) => ({
+        time: day,
+        count: values.totalCount,
+        speed: values.totalSpeed / values.entryCount,
+      }));
+    } else {
+      // --- 3日未満: 元データをそのまま使用 ---
+      timeSeriesData = data.map(item => ({
+        time: item.timestamp.split(' ')[1],
+        count: item.total_vehicle_count,
+        speed: item.avg_speed,
+      }));
+    }
+  } else {
+    // --- 単日表示 ---
+    timeSeriesData = data.map(item => ({
+      time: item.timestamp.split(' ')[1],
+      count: item.total_vehicle_count,
+      speed: item.avg_speed,
+    }));
+  }
+
+  // ====== 車種データの集計 ======
   const vehicleTypeData = data.reduce((acc, item) => {
     acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + item.vehicle_count;
     return acc;
@@ -58,7 +96,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     name: type === 'car' ? '乗用車' : type === 'truck' ? 'トラック' : type === 'motorcycle' ? 'バイク' : type,
     value: count,
   }));
-
 
   return (
     <div className="space-y-8">
@@ -163,7 +200,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
           </ResponsiveContainer>
         </div>
       </div>
-
 
       {/* データテーブル */}
       <TrafficDataTable data={data} className="mt-8" />

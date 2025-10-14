@@ -42,33 +42,63 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     } />;
   }
 
-  // --------------------------
-  // 日ごと平均にまとめる関数
-  // --------------------------
-  const aggregateDailyData = (data: ParkingData[]) => {
-    const grouped = data.reduce((acc, item) => {
-      const [date] = item.timestamp.split(" "); // YYYY-MM-DD
-      if (!acc[date]) {
-        acc[date] = { entry: 0, exit: 0, occupancy: 0, count: 0 };
-      }
-      acc[date].entry += item.entry_count;
-      acc[date].exit += item.exit_count;
-      acc[date].occupancy += item.occupancy_rate * 100; // %
-      acc[date].count += 1;
-      return acc;
-    }, {} as Record<string, { entry: number; exit: number; occupancy: number; count: number }>);
+  // 1時間ごとにデータを集計する関数
+  const aggregateHourlyData = (data: ParkingData[]) => {
+    const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
 
-    return Object.entries(grouped).map(([date, values]) => ({
-      time: date,
-      entry: Math.round(values.entry / values.count),
-      exit: Math.round(values.exit / values.count),
-      occupancy: +(values.occupancy / values.count).toFixed(1),
-    }));
+    data.forEach(item => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00'; // HH:00 形式
+      if (!grouped[hour]) {
+        grouped[hour] = { entry: 0, exit: 0, total: 0 };
+      }
+      
+      if (item.direction === 'in') {
+        grouped[hour].entry += 1;
+      } else if (item.direction === 'out') {
+        grouped[hour].exit += 1;
+      }
+      grouped[hour].total += 1;
+    });
+
+    return Object.entries(grouped)
+      .map(([hour, values]) => ({
+        time: hour,
+        entry: values.entry,
+        exit: values.exit,
+        occupancy: values.total > 0 ? Math.round((values.entry - values.exit) / values.total * 100) : 0,
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time)); // 時間順にソート
   };
 
-  // --------------------------
-  // timeSeriesData の生成
-  // --------------------------
+  // 日ごとにデータを集計する関数
+  const aggregateDailyData = (data: ParkingData[]) => {
+    const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
+
+    data.forEach(item => {
+      const date = item.timestamp.split(' ')[0];
+      if (!grouped[date]) {
+        grouped[date] = { entry: 0, exit: 0, total: 0 };
+      }
+      
+      if (item.direction === 'in') {
+        grouped[date].entry += 1;
+      } else if (item.direction === 'out') {
+        grouped[date].exit += 1;
+      }
+      grouped[date].total += 1;
+    });
+
+    return Object.entries(grouped)
+      .map(([date, values]) => ({
+        time: date,
+        entry: values.entry,
+        exit: values.exit,
+        occupancy: values.total > 0 ? Math.round((values.entry - values.exit) / values.total * 100) : 0,
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
+  // 時系列データの処理
   let timeSeriesData;
 
   if (isRangeMode && startDate && endDate) {
@@ -77,30 +107,17 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays >= 3) {
-      // 3日間以上 → 日ごと平均
+      // 3日以上 → 日ごとに集計
       timeSeriesData = aggregateDailyData(data);
     } else {
-      // 3日未満 → 時間ごと
-      timeSeriesData = data.map(item => ({
-        time: item.timestamp.split(' ')[1], // HH:mm:ss
-        entry: item.entry_count,
-        exit: item.exit_count,
-        occupancy: item.occupancy_rate * 100,
-      }));
+      // 3日未満 → 1時間ごとに集計
+      timeSeriesData = aggregateHourlyData(data);
     }
   } else {
-    // 単日モード → 時間ごと
-    timeSeriesData = data.map(item => ({
-      time: item.timestamp.split(' ')[1],
-      entry: item.entry_count,
-      exit: item.exit_count,
-      occupancy: item.occupancy_rate * 100,
-    }));
+    // 単日モード → 1時間ごとに集計
+    timeSeriesData = aggregateHourlyData(data);
   }
 
-  // --------------------------
-  // 用途別データ
-  // --------------------------
   const usageTypeData = data.reduce((acc, item) => {
     let usageType = 'private';
     if (item.stay_duration > 180) {
@@ -120,30 +137,41 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   // --------------------------
   // 地域別データ
   // --------------------------
-  const regionData = data.reduce((acc, item) => {
-    acc[item.plate_region] = (acc[item.plate_region] || 0) + 1;
+  const cityData = data.reduce((acc, item) => {
+    acc[item.city] = (acc[item.city] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const regionPieData = Object.entries(regionData).map(([region, count]) => ({
-    name: region,
+  const cityPieData = Object.entries(cityData).map(([city, count]) => ({
+    name: city,
     value: count,
   }));
 
   // --------------------------
   // 時間帯別滞在時間
   // --------------------------
-  const hourlyStayData = data.reduce((acc, item) => {
+  const vehicleTypeData = data.reduce((acc, item) => {
+    acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const vehicleTypePieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
+    name: type === 'car' ? '乗用車' : type,
+    value: count,
+  }));
+
+  // エンジンサイズ別データ
+  const engineSizeData = data.reduce((acc, item) => {
     const hour = item.timestamp.split(' ')[1].split(':')[0];
-    if (!acc[hour]) acc[hour] = { hour, totalDuration: 0, count: 0 };
-    acc[hour].totalDuration += item.stay_duration;
+    if (!acc[hour]) acc[hour] = { hour, totalEngineSize: 0, count: 0 };
+    acc[hour].totalEngineSize += item.engine_size;
     acc[hour].count += 1;
     return acc;
-  }, {} as Record<string, { hour: string; totalDuration: number; count: number }>);
+  }, {} as Record<string, { hour: string; totalEngineSize: number; count: number }>);
 
-  const stayDurationData = Object.values(hourlyStayData).map(item => ({
+  const engineSizeChartData = Object.values(engineSizeData).map(item => ({
     hour: `${item.hour}:00`,
-    avgDuration: Math.round(item.totalDuration / item.count),
+    avgEngineSize: Math.round(item.totalEngineSize / item.count),
   }));
 
   return (
@@ -187,6 +215,12 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                 }}
+              formatter={(value, name) => {
+                if (name === '満車率 (%)') {
+                  return [`${value}%`, name];
+                }
+                return [`${value}台`, name];
+              }}
               />
               <Legend />
               <Line
@@ -224,7 +258,6 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         </div>
       </div>
 
-      {/* 以下は元のまま（用途別・地域別・滞在時間・テーブル） */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
         {/* Usage Type Distribution */}
         {/* ... 省略（元のコードのまま） ... */}

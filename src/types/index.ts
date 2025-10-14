@@ -1,19 +1,20 @@
 export interface TrafficData {
   timestamp: string;
-  vehicle_count: number;
-  avg_speed: number;
-  vehicle_type: string;
-  usage_type: string;
+  object_id: number;
+  class_name: string;
+  direction: string;
+  speed_kmh: number;
 }
 
 export interface ParkingData {
   timestamp: string;
-  plate_region: string;
-  stay_duration: number;
-  entry_count: number;
-  exit_count: number;
-  occupancy_rate: number;
-  usage_type?: string;
+  object_id: number;
+  vehicle_type: string;
+  direction: string;
+  city: string;
+  engine_size: number;
+  kana: string;
+  'four-digit number': string;
 }
 
 export interface WeatherData {

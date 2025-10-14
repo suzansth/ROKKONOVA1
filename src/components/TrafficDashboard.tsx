@@ -25,6 +25,57 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   endDate,
   isRangeMode 
 }) => {
+  // 1時間ごとにデータを集計する関数
+  const aggregateHourlyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
+    
+    data.forEach(item => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0];
+      const timeKey = `${hour.toString().padStart(2, '0')}:00`;
+      
+      if (!grouped[timeKey]) {
+        grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
+      }
+      
+      grouped[timeKey].vehicleCount += 1; // 各レコードは1台の車両
+      grouped[timeKey].totalSpeed += item.speed_kmh;
+      grouped[timeKey].speedCount += 1;
+    });
+    
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.vehicleCount,
+        speed: Math.round(data.totalSpeed / data.speedCount * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
+  // 日ごとにデータを集計する関数
+  const aggregateDailyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
+    
+    data.forEach(item => {
+      const date = item.timestamp.split(' ')[0];
+      
+      if (!grouped[date]) {
+        grouped[date] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
+      }
+      
+      grouped[date].vehicleCount += 1; // 各レコードは1台の車両
+      grouped[date].totalSpeed += item.speed_kmh;
+      grouped[date].speedCount += 1;
+    });
+    
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.vehicleCount,
+        speed: Math.round(data.totalSpeed / data.speedCount * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
   const { data, loading, error } = useTrafficData(
     selectedDate, 
     csvData, 
@@ -42,51 +93,33 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     } />;
   }
 
-  // ★ 追加: 1日ごとに集計する関数
-  const aggregateDailyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { totalCount: number; totalSpeed: number; records: number }> = {};
-
-    data.forEach(item => {
-      const date = item.timestamp.split(' ')[0]; // 日付部分
-      if (!grouped[date]) {
-        grouped[date] = { totalCount: 0, totalSpeed: 0, records: 0 };
-      }
-      grouped[date].totalCount += item.vehicle_count;
-      grouped[date].totalSpeed += item.avg_speed;
-      grouped[date].records += 1;
-    });
-
-    return Object.entries(grouped).map(([date, { totalCount, totalSpeed, records }]) => ({
-      time: date,
-      count: Math.round(totalCount / records), // 1日の平均台数
-      speed: Math.round(totalSpeed / records), // 1日の平均速度
-    }));
-  };
-
   // ---- Process data for charts ----
-  let timeSeriesData = data.map(item => ({
-    time: isRangeMode ? item.timestamp.split(' ')[0] : item.timestamp.split(' ')[1], // 範囲モードなら日付、それ以外は時刻
-    count: item.vehicle_count,
-    speed: item.avg_speed,
-  }));
+  let timeSeriesData;
 
-  // ★ 期間モードかつ 3日以上の範囲なら日ごとに集計
   if (isRangeMode && startDate && endDate) {
-    const diffDays = 
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays >= 3) {
+    if (daysDiff >= 3) {
+      // 3日以上の期間: 日ごとに集計
       timeSeriesData = aggregateDailyData(data);
+    } else {
+      // 3日未満の期間: 1時間ごとに集計
+      timeSeriesData = aggregateHourlyData(data);
     }
+  } else {
+    // 単日表示: 1時間ごとに集計
+    timeSeriesData = aggregateHourlyData(data);
   }
 
   const vehicleTypeData = data.reduce((acc, item) => {
-    acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + item.vehicle_count;
+    acc[item.class_name] = (acc[item.class_name] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
-    name: type === 'car' ? '乗用車' : type === 'truck' ? 'トラック' : type === 'motorcycle' ? 'バイク' : type,
+    name: type === 'car' ? '乗用車' : type === 'truck' ? 'トラック' : type === 'bus' ? 'バス' : type,
     value: count,
   }));
 
@@ -131,6 +164,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                formatter={(value, name) => {
+                  if (name === '平均速度 (km/h)') {
+                    return [`${value} km/h`, name];
+                  }
+                  return [`${value}台`, name];
                 }}
               />
               <Legend />

@@ -16,29 +16,29 @@ app.use(express.json());
 
 // Mock CSV data for demonstration
 const mockTrafficData = [
-  { timestamp: '2024-01-15 09:00', vehicle_count: 45, avg_speed: 35.2, vehicle_type: 'car', usage_type: 'private' },
-  { timestamp: '2024-01-15 09:10', vehicle_count: 52, avg_speed: 32.8, vehicle_type: 'truck', usage_type: 'commercial' },
-  { timestamp: '2024-01-15 09:20', vehicle_count: 38, avg_speed: 37.5, vehicle_type: 'car', usage_type: 'rental' },
-  { timestamp: '2024-01-15 09:30', vehicle_count: 61, avg_speed: 29.3, vehicle_type: 'motorcycle', usage_type: 'private' },
-  { timestamp: '2024-01-15 09:40', vehicle_count: 44, avg_speed: 34.7, vehicle_type: 'car', usage_type: 'private' },
-  { timestamp: '2024-01-15 09:50', vehicle_count: 49, avg_speed: 33.1, vehicle_type: 'truck', usage_type: 'commercial' },
-  { timestamp: '2024-01-15 10:00', vehicle_count: 56, avg_speed: 31.8, vehicle_type: 'car', usage_type: 'rental' },
-  { timestamp: '2024-01-15 10:10', vehicle_count: 42, avg_speed: 36.4, vehicle_type: 'motorcycle', usage_type: 'private' },
-  { timestamp: '2024-01-15 10:20', vehicle_count: 48, avg_speed: 34.2, vehicle_type: 'car', usage_type: 'private' },
-  { timestamp: '2024-01-15 10:30', vehicle_count: 53, avg_speed: 32.5, vehicle_type: 'truck', usage_type: 'commercial' }
+  { timestamp: '2025-08-16 06:02:15', object_id: 1, class_name: 'car', direction: 'R', speed_kmh: 27.3 },
+  { timestamp: '2025-08-16 06:16:48', object_id: 2, class_name: 'bus', direction: 'L', speed_kmh: 19.8 },
+  { timestamp: '2025-08-16 06:31:25', object_id: 3, class_name: 'truck', direction: 'R', speed_kmh: 33.5 },
+  { timestamp: '2025-08-16 06:45:57', object_id: 4, class_name: 'car', direction: 'L', speed_kmh: 24.1 },
+  { timestamp: '2025-08-16 07:00:42', object_id: 5, class_name: 'bus', direction: 'R', speed_kmh: 22.6 },
+  { timestamp: '2025-08-16 07:15:19', object_id: 6, class_name: 'truck', direction: 'L', speed_kmh: 28.7 },
+  { timestamp: '2025-08-16 07:29:55', object_id: 7, class_name: 'car', direction: 'R', speed_kmh: 36.4 },
+  { timestamp: '2025-08-16 07:44:38', object_id: 8, class_name: 'truck', direction: 'R', speed_kmh: 41.2 },
+  { timestamp: '2025-08-16 07:59:23', object_id: 9, class_name: 'bus', direction: 'L', speed_kmh: 18.5 },
+  { timestamp: '2025-08-16 08:14:07', object_id: 10, class_name: 'car', direction: 'L', speed_kmh: 32.9 }
 ];
 
 const mockParkingData = [
-  { timestamp: '2024-01-15 09:00', plate_region: 'Osaka', stay_duration: 120, entry_count: 8, exit_count: 5, occupancy_rate: 0.65 },
-  { timestamp: '2024-01-15 09:10', plate_region: 'Kobe', stay_duration: 95, entry_count: 12, exit_count: 7, occupancy_rate: 0.70 },
-  { timestamp: '2024-01-15 09:20', plate_region: 'Kyoto', stay_duration: 150, entry_count: 6, exit_count: 9, occupancy_rate: 0.67 },
-  { timestamp: '2024-01-15 09:30', plate_region: 'Nara', stay_duration: 180, entry_count: 10, exit_count: 8, occupancy_rate: 0.69 },
-  { timestamp: '2024-01-15 09:40', plate_region: 'Osaka', stay_duration: 110, entry_count: 9, exit_count: 11, occupancy_rate: 0.67 },
-  { timestamp: '2024-01-15 09:50', plate_region: 'Kobe', stay_duration: 135, entry_count: 7, exit_count: 6, occupancy_rate: 0.68 },
-  { timestamp: '2024-01-15 10:00', plate_region: 'Kyoto', stay_duration: 165, entry_count: 11, exit_count: 8, occupancy_rate: 0.71 },
-  { timestamp: '2024-01-15 10:10', plate_region: 'Wakayama', stay_duration: 90, entry_count: 5, exit_count: 7, occupancy_rate: 0.69 },
-  { timestamp: '2024-01-15 10:20', plate_region: 'Osaka', stay_duration: 125, entry_count: 8, exit_count: 10, occupancy_rate: 0.67 },
-  { timestamp: '2024-01-15 10:30', plate_region: 'Kobe', stay_duration: 140, entry_count: 9, exit_count: 6, occupancy_rate: 0.70 }
+  { timestamp: '2025-10-10 14:34:24', object_id: 1, vehicle_type: 'car', direction: 'in', city: '世田谷', engine_size: 310, kana: 'ふ', 'four-digit number': '70-50' },
+  { timestamp: '2025-10-10 14:40:34', object_id: 2, vehicle_type: 'car', direction: 'in', city: '横浜', engine_size: 331, kana: 'や', 'four-digit number': '28-50' },
+  { timestamp: '2025-10-10 14:45:12', object_id: 3, vehicle_type: 'car', direction: 'out', city: '世田谷', engine_size: 280, kana: 'あ', 'four-digit number': '12-34' },
+  { timestamp: '2025-10-10 14:52:18', object_id: 4, vehicle_type: 'car', direction: 'in', city: '品川', engine_size: 350, kana: 'か', 'four-digit number': '56-78' },
+  { timestamp: '2025-10-10 15:01:45', object_id: 5, vehicle_type: 'car', direction: 'out', city: '横浜', engine_size: 290, kana: 'さ', 'four-digit number': '90-12' },
+  { timestamp: '2025-10-10 15:08:33', object_id: 6, vehicle_type: 'car', direction: 'in', city: '川崎', engine_size: 320, kana: 'た', 'four-digit number': '34-56' },
+  { timestamp: '2025-10-10 15:15:27', object_id: 7, vehicle_type: 'car', direction: 'in', city: '世田谷', engine_size: 340, kana: 'な', 'four-digit number': '78-90' },
+  { timestamp: '2025-10-10 15:22:41', object_id: 8, vehicle_type: 'car', direction: 'out', city: '品川', engine_size: 300, kana: 'は', 'four-digit number': '23-45' },
+  { timestamp: '2025-10-10 15:29:15', object_id: 9, vehicle_type: 'car', direction: 'in', city: '横浜', engine_size: 360, kana: 'ま', 'four-digit number': '67-89' },
+  { timestamp: '2025-10-10 15:35:52', object_id: 10, vehicle_type: 'car', direction: 'out', city: '川崎', engine_size: 275, kana: 'ら', 'four-digit number': '01-23' }
 ];
 
 const mockWeatherData = [

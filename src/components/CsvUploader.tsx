@@ -13,8 +13,8 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const expectedColumns = {
-    traffic: ['timestamp', 'vehicle_count', 'avg_speed', 'vehicle_type', 'usage_type'],
-    parking: ['timestamp', 'plate_region', 'stay_duration', 'entry_count', 'exit_count', 'occupancy_rate'],
+    traffic: ['timestamp', 'object_id', 'class_name', 'direction', 'speed_kmh'],
+    parking: ['timestamp', 'object_id', 'vehicle_type', 'direction', 'city', 'engine_size', 'kana', 'four-digit number'],
     weather: ['date', 'weather', 'temperature', 'humidity']
   };
 
@@ -81,13 +81,12 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
           
           // Type conversion based on data type
           if (dataType === 'traffic') {
-            if (header === 'vehicle_count') value = parseInt(value);
-            if (header === 'avg_speed') value = parseFloat(value);
+            if (header === 'object_id') value = parseInt(value);
+            if (header === 'speed_kmh') value = parseFloat(value);
           } else if (dataType === 'parking') {
-            if (['stay_duration', 'entry_count', 'exit_count'].includes(header)) {
+            if (['object_id', 'engine_size'].includes(header)) {
               value = parseInt(value);
             }
-            if (header === 'occupancy_rate') value = parseFloat(value);
           } else if (dataType === 'weather') {
             if (header === 'temperature') value = parseInt(value);
             if (header === 'humidity') value = parseInt(value);
