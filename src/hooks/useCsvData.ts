@@ -1,26 +1,23 @@
 import { useState } from 'react';
-import { TrafficData, ParkingData, WeatherData } from '../types';
+import { TrafficData, ParkingData } from '../types';
 
 interface CsvDataState {
   traffic: TrafficData[];
   parking: ParkingData[];
-  weather: WeatherData[];
 }
 
 export const useCsvData = () => {
   const [csvData, setCsvData] = useState<CsvDataState>({
     traffic: [],
-    parking: [],
-    weather: []
+    parking: []
   });
 
   const [isUsingCsvData, setIsUsingCsvData] = useState({
     traffic: false,
-    parking: false,
-    weather: false
+    parking: false
   });
 
-  const uploadCsvData = (data: any[], type: 'traffic' | 'parking' | 'weather') => {
+  const uploadCsvData = (data: any[], type: 'traffic' | 'parking') => {
     setCsvData(prev => ({
       ...prev,
       [type]: data
@@ -32,7 +29,7 @@ export const useCsvData = () => {
     }));
   };
 
-  const clearCsvData = (type: 'traffic' | 'parking' | 'weather') => {
+  const clearCsvData = (type: 'traffic' | 'parking') => {
     setCsvData(prev => ({
       ...prev,
       [type]: []
@@ -45,7 +42,7 @@ export const useCsvData = () => {
   };
 
   const getCsvData = (
-    type: 'traffic' | 'parking' | 'weather', 
+    type: 'traffic' | 'parking', 
     selectedDate?: string,
     startDate?: string,
     endDate?: string,
@@ -58,16 +55,12 @@ export const useCsvData = () => {
     // Filter by date range or single date
     if (isRangeMode && startDate && endDate) {
       return data.filter(item => {
-        const itemDate = type === 'weather' 
-          ? (item as WeatherData).date 
-          : (item as TrafficData | ParkingData).timestamp.split(' ')[0];
+        const itemDate = (item as TrafficData | ParkingData).timestamp.split(' ')[0];
         return itemDate >= startDate && itemDate <= endDate;
       });
     } else if (!isRangeMode && selectedDate) {
       return data.filter(item => {
-        const itemDate = type === 'weather' 
-          ? (item as WeatherData).date 
-          : (item as TrafficData | ParkingData).timestamp.split(' ')[0];
+        const itemDate = (item as TrafficData | ParkingData).timestamp.split(' ')[0];
         return itemDate === selectedDate;
       });
     }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DateFilter from './components/DateFilter';
-import WeatherWidget from './components/WeatherWidget';
 import TrafficDashboard from './components/TrafficDashboard';
 import ParkingDashboard from './components/ParkingDashboard';
 import CsvUploader from './components/CsvUploader';
@@ -71,31 +70,9 @@ function App() {
                 dataType="parking" 
                 onDataUploaded={uploadCsvData}
               />
-              <CsvUploader 
-                dataType="weather" 
-                onDataUploaded={uploadCsvData}
-              />
             </div>
           )}
         </div>
-        
-        {/* Data Source Toggles */}
-        <DataSourceToggle
-          isUsingCsv={isUsingCsvData.weather}
-          onToggle={() => {}}
-          onClear={() => clearCsvData('weather')}
-          dataType="weather"
-          csvDataCount={csvData.weather.length}
-        />
-        
-        <WeatherWidget 
-          selectedDate={isRangeMode ? undefined : selectedDate}
-          csvData={getCsvData('weather', selectedDate, startDate, endDate, isRangeMode)}
-          isUsingCsv={isUsingCsvData.weather}
-          startDate={startDate}
-          endDate={endDate}
-          isRangeMode={isRangeMode}
-        />
         
         {activeTab === 'traffic' && (
           <>
