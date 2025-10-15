@@ -1,23 +1,26 @@
 import { useState } from 'react';
-import { TrafficData, ParkingData } from '../types';
+import { TrafficData, ParkingData, WeatherData } from '../types';
 
 interface CsvDataState {
   traffic: TrafficData[];
   parking: ParkingData[];
+  weather: WeatherData[];
 }
 
 export const useCsvData = () => {
   const [csvData, setCsvData] = useState<CsvDataState>({
     traffic: [],
-    parking: []
+    parking: [],
+    weather: []
   });
 
   const [isUsingCsvData, setIsUsingCsvData] = useState({
     traffic: false,
-    parking: false
+    parking: false,
+    weather: false
   });
 
-  const uploadCsvData = (data: any[], type: 'traffic' | 'parking') => {
+  const uploadCsvData = (data: any[], type: 'traffic' | 'parking' | 'weather') => {
     setCsvData(prev => ({
       ...prev,
       [type]: data
@@ -29,7 +32,7 @@ export const useCsvData = () => {
     }));
   };
 
-  const clearCsvData = (type: 'traffic' | 'parking') => {
+  const clearCsvData = (type: 'traffic' | 'parking' | 'weather') => {
     setCsvData(prev => ({
       ...prev,
       [type]: []
@@ -42,7 +45,7 @@ export const useCsvData = () => {
   };
 
   const getCsvData = (
-    type: 'traffic' | 'parking', 
+    type: 'traffic' | 'parking' | 'weather', 
     selectedDate?: string,
     startDate?: string,
     endDate?: string,
@@ -55,12 +58,16 @@ export const useCsvData = () => {
     // Filter by date range or single date
     if (isRangeMode && startDate && endDate) {
       return data.filter(item => {
-        const itemDate = (item as TrafficData | ParkingData).timestamp.split(' ')[0];
+        const itemDate = type === 'weather' 
+          ? (item as WeatherData).date 
+          : (item as TrafficData | ParkingData).timestamp.split(' ')[0];
         return itemDate >= startDate && itemDate <= endDate;
       });
     } else if (!isRangeMode && selectedDate) {
       return data.filter(item => {
-        const itemDate = (item as TrafficData | ParkingData).timestamp.split(' ')[0];
+        const itemDate = type === 'weather' 
+          ? (item as WeatherData).date 
+          : (item as TrafficData | ParkingData).timestamp.split(' ')[0];
         return itemDate === selectedDate;
       });
     }

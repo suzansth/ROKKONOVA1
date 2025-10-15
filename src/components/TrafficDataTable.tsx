@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Truck, Bus } from 'lucide-react';
+import { Car, Truck, Bike } from 'lucide-react';
 import DataTable from './DataTable';
 import { TrafficData } from '../types';
 
@@ -16,7 +16,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
       case 'truck':
         return <Truck className="w-4 h-4 text-green-600" />;
       case 'bus':
-        return <Bus className="w-4 h-4 text-orange-600" />;
+        return <Bike className="w-4 h-4 text-orange-600" />;
       default:
         return <Car className="w-4 h-4 text-gray-600" />;
     }
