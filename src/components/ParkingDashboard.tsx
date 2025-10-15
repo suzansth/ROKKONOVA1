@@ -118,25 +118,6 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     timeSeriesData = aggregateHourlyData(data);
   }
 
-  const usageTypeData = data.reduce((acc, item) => {
-    let usageType = 'private';
-    if (item.stay_duration > 180) {
-      usageType = 'commercial';
-    } else if (item.plate_region === 'Osaka' && item.stay_duration < 120) {
-      usageType = 'rental';
-    }
-    acc[usageType] = (acc[usageType] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const usagePieData = Object.entries(usageTypeData).map(([type, count]) => ({
-    name: type === 'private' ? '自家用' : type === 'commercial' ? '商用' : type === 'rental' ? 'レンタカー' : type,
-    value: count,
-  }));
-
-  // --------------------------
-  // 地域別データ
-  // --------------------------
   const cityData = data.reduce((acc, item) => {
     acc[item.city] = (acc[item.city] || 0) + 1;
     return acc;
@@ -146,6 +127,10 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     name: city,
     value: count,
   }));
+
+  // --------------------------
+  // 地域別データ
+  // --------------------------
 
   // --------------------------
   // 時間帯別滞在時間
@@ -160,8 +145,8 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     value: count,
   }));
 
-  // エンジンサイズ別データ
-  const engineSizeData = data.reduce((acc, item) => {
+  // Group by hour for engine size
+  const hourlyEngineData = data.reduce((acc, item) => {
     const hour = item.timestamp.split(' ')[1].split(':')[0];
     if (!acc[hour]) acc[hour] = { hour, totalEngineSize: 0, count: 0 };
     acc[hour].totalEngineSize += item.engine_size;
@@ -169,7 +154,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     return acc;
   }, {} as Record<string, { hour: string; totalEngineSize: number; count: number }>);
 
-  const engineSizeChartData = Object.values(engineSizeData).map(item => ({
+  const engineSizeData = Object.values(hourlyEngineData).map(item => ({
     hour: `${item.hour}:00`,
     avgEngineSize: Math.round(item.totalEngineSize / item.count),
   }));
@@ -259,8 +244,115 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-        {/* Usage Type Distribution */}
-        {/* ... 省略（元のコードのまま） ... */}
+
+        {/* Vehicle Type Distribution */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <Pie
+                  data={[{ name: '乗用車', value: data.length }]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {[{ name: '乗用車', value: data.length }].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* City Distribution */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">地域別構成</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <Pie
+                data={cityPieData}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                stroke="#fff"
+                strokeWidth={2}
+              >
+                {cityPieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Average Engine Size */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">時間帯別平均エンジンサイズ</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={engineSizeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="hour" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                label={{ value: 'エンジンサイズ (cc)', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip 
+                formatter={(value) => [`${value}cc`, '平均エンジンサイズ']}
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <Bar 
+                dataKey="avgEngineSize" 
+                fill="#3B82F6" 
+                radius={[4, 4, 0, 0]}
+                stroke="#2563EB"
+                strokeWidth={1}
+              />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       <ParkingDataTable data={data} className="mt-8" />
