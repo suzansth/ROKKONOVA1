@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Upload, FileText, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface CsvUploaderProps {
-  onDataUploaded: (data: any[], type: 'traffic' | 'parking' | 'weather') => void;
-  dataType: 'traffic' | 'parking' | 'weather';
+  onDataUploaded: (data: any[], type: 'traffic' | 'parking') => void;
+  dataType: 'traffic' | 'parking';
 }
 
 const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) => {
@@ -14,8 +14,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
 
   const expectedColumns = {
     traffic: ['timestamp', 'object_id', 'class_name', 'direction', 'speed_kmh'],
-    parking: ['timestamp', 'object_id', 'vehicle_type', 'direction', 'city', 'engine_size', 'kana', 'four-digit number'],
-    weather: ['date', 'weather', 'temperature', 'humidity']
+    parking: ['timestamp', 'plate_region', 'stay_duration', 'entry_count', 'exit_count', 'occupancy_rate']
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -87,9 +86,6 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
             if (['object_id', 'engine_size'].includes(header)) {
               value = parseInt(value);
             }
-          } else if (dataType === 'weather') {
-            if (header === 'temperature') value = parseInt(value);
-            if (header === 'humidity') value = parseInt(value);
           }
           
           row[header] = value;
@@ -118,8 +114,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
   const getDataTypeLabel = () => {
     const labels = {
       traffic: '交通データ',
-      parking: '駐車場データ',
-      weather: '天気データ'
+      parking: '駐車場データ'
     };
     return labels[dataType];
   };

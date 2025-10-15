@@ -5,7 +5,7 @@ interface DataSourceToggleProps {
   isUsingCsv: boolean;
   onToggle: () => void;
   onClear: () => void;
-  dataType: 'traffic' | 'parking' | 'weather';
+  dataType: 'traffic' | 'parking';
   csvDataCount: number;
 }
 
@@ -19,8 +19,7 @@ const DataSourceToggle: React.FC<DataSourceToggleProps> = ({
   const getDataTypeLabel = () => {
     const labels = {
       traffic: '交通データ',
-      parking: '駐車場データ',
-      weather: '天気データ'
+      parking: '駐車場データ'
     };
     return labels[dataType];
   };
