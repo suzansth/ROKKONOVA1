@@ -66,7 +66,7 @@ const DataSourceToggle: React.FC<DataSourceToggleProps> = ({
                 : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
             }`}
           >
-            {isUsingCsv ? 'CSVデータ使用中' : 'サンプルデータ使用中'}
+            {isUsingCsv ? 'CSVデータ使用中' : 'データ使用中'}
           </button>
         </div>
       </div>
