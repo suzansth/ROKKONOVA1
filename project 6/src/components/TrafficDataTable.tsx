@@ -81,7 +81,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
     },
     {
       key: 'avg_speed',
-      label: '平均速度',
+      label: '平均通過速度',
       sortable: true,
       render: (value: number) => (
         <div className="text-center">
