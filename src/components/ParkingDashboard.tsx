@@ -35,7 +35,11 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   );
 
   if (loading) return <LoadingSpinner />;
- 
+
+  if (!data || data.length === 0) {
+    return <ErrorMessage message={
+      isRangeMode ? "選択した期間の駐車場データがありません" : "選択した日付の駐車場データがありません"
+    } />;
   }
 
   // 1時間ごとにデータを集計する関数
