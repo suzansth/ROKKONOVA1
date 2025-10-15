@@ -73,7 +73,7 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
       render: (value: number) => (
         <div className="text-center">
           <span className="font-medium">{value}</span>
-          <span className="text-sm text-gray-500 ml-1">cc</span>
+          <span className="text-sm text-gray-500 ml-1"></span>
         </div>
       )
     },
