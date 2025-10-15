@@ -31,31 +31,6 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
     return labels[type] || type;
   };
 
-  const getUsageTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      private: '自家用',
-      commercial: '商用',
-      rental: 'レンタカー'
-    };
-    return labels[type] || type;
-  };
-
-  const getUsageTypeBadge = (type: string) => {
-    const styles: Record<string, string> = {
-      private: 'bg-blue-100 text-blue-800',
-      commercial: 'bg-green-100 text-green-800',
-      rental: 'bg-orange-100 text-orange-800'
-    };
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        styles[type] || 'bg-gray-100 text-gray-800'
-      }`}>
-        {getUsageTypeLabel(type)}
-      </span>
-    );
-  };
-
   const columns = [
     {
       key: 'timestamp',
@@ -105,7 +80,7 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
     },
     {
       key: 'speed_kmh',
-      label: '通過台数',
+      label: '速度',
       sortable: true,
       render: (value: number) => (
         <div className="text-center">
