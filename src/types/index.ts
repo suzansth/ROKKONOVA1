@@ -16,10 +16,3 @@ export interface ParkingData {
   kana: string;
   'four-digit number': string;
 }
-
-export interface WeatherData {
-  date: string;
-  weather: string;
-  temperature: number;
-  humidity: number;
-}

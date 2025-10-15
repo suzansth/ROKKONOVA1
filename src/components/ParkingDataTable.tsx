@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Car, Truck, Bike } from 'lucide-react';
+import { MapPin, Clock, ArrowUp, ArrowDown } from 'lucide-react';
 import DataTable from './DataTable';
 import { ParkingData } from '../types';
 
@@ -9,84 +9,6 @@ interface ParkingDataTableProps {
 }
 
 const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) => {
-  const getOccupancyBadge = (rate: number) => {
-    const percentage = Math.round(rate * 100);
-    let colorClass = '';
-    
-    if (percentage >= 90) {
-      colorClass = 'bg-red-100 text-red-800';
-    } else if (percentage >= 70) {
-      colorClass = 'bg-orange-100 text-orange-800';
-    } else if (percentage >= 50) {
-      colorClass = 'bg-yellow-100 text-yellow-800';
-    } else {
-      colorClass = 'bg-green-100 text-green-800';
-    }
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-        {percentage}%
-      </span>
-    );
-  };
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    
-    if (hours > 0) {
-      return `${hours}時間${mins > 0 ? `${mins}分` : ''}`;
-    }
-    return `${mins}分`;
-  };
-
-  const getUsageTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      private: '自家用',
-      commercial: '商用',
-      rental: 'レンタカー'
-    };
-    return labels[type] || type;
-  };
-
-  const getUsageTypeBadge = (type: string) => {
-    const styles: Record<string, string> = {
-      private: 'bg-blue-100 text-blue-800',
-      commercial: 'bg-green-100 text-green-800',
-      rental: 'bg-orange-100 text-orange-800'
-    };
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        styles[type] || 'bg-gray-100 text-gray-800'
-      }`}>
-        {getUsageTypeLabel(type)}
-      </span>
-    );
-  };
-
-  const getVehicleTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      car: '乗用車',
-      truck: 'トラック',
-      bus: 'バス'
-    };
-    return labels[type] || type;
-  };
-
-  const getVehicleIcon = (type: string) => {
-    switch (type) {
-      case 'car':
-        return <Car className="w-4 h-4 text-blue-600" />;
-      case 'truck':
-        return <Truck className="w-4 h-4 text-green-600" />;
-      case 'bus':
-        return <Bike className="w-4 h-4 text-orange-600" />;
-      default:
-        return <Car className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
   const columns = [
     {
       key: 'timestamp',
@@ -114,9 +36,8 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
       label: '車種',
       sortable: true,
       render: (value: string) => (
-        <div className="flex items-center space-x-2">
-          {getVehicleIcon(value)}
-          <span className="font-medium">{getVehicleTypeLabel(value)}</span>
+        <div className="text-center">
+          <span className="font-medium">{value === 'car' ? '乗用車' : value}</span>
         </div>
       )
     },
@@ -136,7 +57,7 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
     },
     {
       key: 'city',
-      label: '都市',
+      label: '地域',
       sortable: true,
       render: (value: string) => (
         <div className="flex items-center space-x-2">
@@ -151,8 +72,8 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
       sortable: true,
       render: (value: number) => (
         <div className="text-center">
-          <span className="text-sm font-medium text-gray-900">{value}</span>
-          <span className="text-xs text-gray-500 ml-1">cc</span>
+          <span className="font-medium">{value}</span>
+          <span className="text-sm text-gray-500 ml-1">cc</span>
         </div>
       )
     },
@@ -162,17 +83,17 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
       sortable: true,
       render: (value: string) => (
         <div className="text-center">
-          <span className="text-lg font-medium text-gray-900">{value}</span>
+          <span className="font-medium text-lg">{value}</span>
         </div>
       )
     },
     {
       key: 'four-digit number',
-      label: '4桁番号',
+      label: 'ナンバー',
       sortable: true,
       render: (value: string) => (
         <div className="text-center">
-          <span className="text-sm font-mono text-gray-900">{value}</span>
+          <span className="font-mono font-medium">{value}</span>
         </div>
       )
     }
@@ -183,7 +104,7 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">駐車場データ詳細</h3>
         <p className="text-sm text-gray-600 mt-1">
-          駐車場の入出庫データの詳細情報です。列ヘッダーをクリックしてソートできます。
+          時系列順に並んだ駐車場データの詳細情報です。列ヘッダーをクリックしてソートできます。
         </p>
       </div>
       <DataTable data={data} columns={columns} itemsPerPage={15} />

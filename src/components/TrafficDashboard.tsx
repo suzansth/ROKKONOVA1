@@ -86,7 +86,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   );
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+　if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
   if (!data || data.length === 0) {
     return <ErrorMessage message={
       isRangeMode ? "選択した期間の交通データがありません" : "選択した日付の交通データがありません"

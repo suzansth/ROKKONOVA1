@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DateFilter from './components/DateFilter';
-import WeatherWidget from './components/WeatherWidget';
 import TrafficDashboard from './components/TrafficDashboard';
 import ParkingDashboard from './components/ParkingDashboard';
 import CsvUploader from './components/CsvUploader';
@@ -10,9 +9,9 @@ import { useCsvData } from './hooks/useCsvData';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'traffic' | 'parking'>('traffic');
-  const [selectedDate, setSelectedDate] = useState('2024-01-15');
-  const [startDate, setStartDate] = useState('2024-01-15');
-  const [endDate, setEndDate] = useState('2024-01-15');
+  const [selectedDate, setSelectedDate] = useState('2025-01-15');
+  const [startDate, setStartDate] = useState('2025-01-15');
+  const [endDate, setEndDate] = useState('2025-01-15');
   const [isRangeMode, setIsRangeMode] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   
@@ -71,31 +70,9 @@ function App() {
                 dataType="parking" 
                 onDataUploaded={uploadCsvData}
               />
-              <CsvUploader 
-                dataType="weather" 
-                onDataUploaded={uploadCsvData}
-              />
             </div>
           )}
         </div>
-        
-        {/* Data Source Toggles */}
-        <DataSourceToggle
-          isUsingCsv={isUsingCsvData.weather}
-          onToggle={() => {}}
-          onClear={() => clearCsvData('weather')}
-          dataType="weather"
-          csvDataCount={csvData.weather.length}
-        />
-        
-        <WeatherWidget 
-          selectedDate={isRangeMode ? undefined : selectedDate}
-          csvData={getCsvData('weather', selectedDate, startDate, endDate, isRangeMode)}
-          isUsingCsv={isUsingCsvData.weather}
-          startDate={startDate}
-          endDate={endDate}
-          isRangeMode={isRangeMode}
-        />
         
         {activeTab === 'traffic' && (
           <>
