@@ -1,107 +1,78 @@
-import React from 'react';
-import { Car, Truck, Bus } from 'lucide-react';
-import DataTable from './DataTable';
-import { TrafficData } from '../types';
+<ResponsiveContainer width="100%" height="100%">
+  <LineChart data={timeSeriesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis 
+      dataKey="time" 
+      tick={{ fontSize: 12 }}
+      angle={-45}
+      textAnchor="end"
+      height={60}
+    />
+    <YAxis 
+      yAxisId="left" 
+      tick={{ fontSize: 12 }}
+      label={{ value: '通過台数', angle: -90, position: 'insideLeft' }}
+    />
+    <YAxis 
+      yAxisId="right" 
+      orientation="right" 
+      tick={{ fontSize: 12 }}
+      label={{ value: '平均速度 (km/h)', angle: 90, position: 'insideRight' }}
+    />
+    <Tooltip 
+      contentStyle={{ 
+        backgroundColor: 'white', 
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+      }}
+      formatter={(value, name) => {
+        if (name === '平均速度 (km/h)') {
+          return [`${value} km/h`, name];
+        }
+        return [`${value}台`, name];
+      }}
+    />
+    <Legend />
 
-interface TrafficDataTableProps {
-  data: TrafficData[];
-  className?: string;
-}
+    {/* 通過台数（青） */}
+    <Line
+      yAxisId="left"
+      type="monotone"
+      dataKey="count"
+      stroke="#3B82F6"
+      strokeWidth={3}
+      name="通過台数"
+      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+      activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+    />
 
-const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) => {
-  const getVehicleIcon = (type: string) => {
-    switch (type) {
-      case 'car':
-        return <Car className="w-4 h-4 text-blue-600" />;
-      case 'truck':
-        return <Truck className="w-4 h-4 text-green-600" />;
-      case 'bus':
-        return <Bus className="w-4 h-4 text-orange-600" />;
-      default:
-        return <Car className="w-4 h-4 text-gray-600" />;
-    }
-  };
+    {/* 平均速度（通常＝緑） */}
+    <Line
+      yAxisId="right"
+      type="monotone"
+      dataKey="speed"
+      stroke="#10B981"
+      strokeWidth={3}
+      name="平均速度 (km/h)"
+      dot={false}
+      isAnimationActive={false}
+      connectNulls
+      data={timeSeriesData.map(d => (d.speed > 30 ? d : { ...d, speed: null }))}
+    />
 
-  const getVehicleTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      car: '乗用車',
-      truck: 'トラック',
-      bus: 'バス'
-    };
-    return labels[type] || type;
-  };
-
-  const columns = [
-    {
-      key: 'timestamp',
-      label: '時刻',
-      sortable: true,
-      render: (value: string) => (
-        <div className="font-medium">
-          <div className="text-gray-900">{value.split(' ')[1]}</div>
-          <div className="text-xs text-gray-500">{value.split(' ')[0]}</div>
-        </div>
-      )
-    },
-    {
-      key: 'object_id',
-      label: 'ID',
-      sortable: true,
-      render: (value: number) => (
-        <div className="text-center">
-          <span className="text-sm font-medium text-gray-900">#{value}</span>
-        </div>
-      )
-    },
-    {
-      key: 'class_name',
-      label: '車種',
-      sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center space-x-2">
-          {getVehicleIcon(value)}
-          <span className="font-medium">{getVehicleTypeLabel(value)}</span>
-        </div>
-      )
-    },
-    {
-      key: 'direction',
-      label: '方向',
-      sortable: true,
-      render: (value: string) => (
-        <div className="text-center">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            value === 'R' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-          }`}>
-            {value === 'R' ? '右' : '左'}
-          </span>
-        </div>
-      )
-    },
-    {
-      key: 'speed_kmh',
-      label: '通過速度',
-      sortable: true,
-      render: (value: number) => (
-        <div className="text-center">
-          <span className="text-lg font-semibold text-gray-900">{value.toFixed(1)}</span>
-          <span className="text-sm text-gray-500 ml-1">km/h</span>
-        </div>
-      )
-    }
-  ];
-
-  return (
-    <div className={className}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">交通量データ詳細</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          1時間ごとに集計された交通量データの詳細情報です。列ヘッダーをクリックしてソートできます。
-        </p>
-      </div>
-      <DataTable data={data} columns={columns} itemsPerPage={15} />
-    </div>
-  );
-};
-
-export default TrafficDataTable;
+    {/* 渋滞（赤） */}
+    <Line
+      yAxisId="right"
+      type="monotone"
+      dataKey="speed"
+      stroke="#EF4444"
+      strokeWidth={3}
+      name="渋滞 (30km/h以下)"
+      dot={false}
+      isAnimationActive={false}
+      connectNulls
+      data={timeSeriesData.map(d => (d.speed <= 30 ? d : { ...d, speed: null }))}
+    />
+  </LineChart>
+</ResponsiveContainer>
