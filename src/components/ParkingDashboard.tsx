@@ -1,5 +1,14 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import { useParkingData } from '../hooks/useApi';
 import { ParkingData } from '../types';
 import LoadingSpinner from './LoadingSpinner';
@@ -17,17 +26,17 @@ interface ParkingDashboardProps {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-const ParkingDashboard: React.FC<ParkingDashboardProps> = ({ 
-  selectedDate, 
-  csvData, 
+const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
+  selectedDate,
+  csvData,
   isUsingCsv,
   startDate,
   endDate,
-  isRangeMode 
+  isRangeMode,
 }) => {
   const { data, loading, error } = useParkingData(
-    selectedDate, 
-    csvData, 
+    selectedDate,
+    csvData,
     isUsingCsv,
     startDate,
     endDate,
@@ -35,28 +44,33 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   );
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={`駐車場データの取得に失敗しました: ${error}`} />;
+  if (error)
+    return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+
   if (!data || data.length === 0) {
-    return <ErrorMessage message={
-      isRangeMode ? "選択した期間の駐車場データがありません" : "選択した日付の駐車場データがありません"
-    } />;
+    return (
+      <ErrorMessage
+        message={
+          isRangeMode
+            ? '選択した期間の駐車場データがありません'
+            : '選択した日付の駐車場データがありません'
+        }
+      />
+    );
   }
 
-  // 1時間ごとにデータを集計する関数
+  // === 1時間ごとにデータを集計 ===
   const aggregateHourlyData = (data: ParkingData[]) => {
     const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
 
-    data.forEach(item => {
-      const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00'; // HH:00 形式
+    data.forEach((item) => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00';
       if (!grouped[hour]) {
         grouped[hour] = { entry: 0, exit: 0, total: 0 };
       }
-      
-      if (item.direction === 'in') {
-        grouped[hour].entry += 1;
-      } else if (item.direction === 'out') {
-        grouped[hour].exit += 1;
-      }
+
+      if (item.direction === 'in') grouped[hour].entry += 1;
+      if (item.direction === 'out') grouped[hour].exit += 1;
       grouped[hour].total += 1;
     });
 
@@ -65,26 +79,26 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         time: hour,
         entry: values.entry,
         exit: values.exit,
-        occupancy: values.total > 0 ? Math.round((values.entry - values.exit) / values.total * 100) : 0,
+        occupancy:
+          values.total > 0
+            ? Math.round(((values.entry - values.exit) / values.total) * 100)
+            : 0,
       }))
-      .sort((a, b) => a.time.localeCompare(b.time)); // 時間順にソート
+      .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // 日ごとにデータを集計する関数
+  // === 日ごとにデータを集計 ===
   const aggregateDailyData = (data: ParkingData[]) => {
     const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
 
-    data.forEach(item => {
+    data.forEach((item) => {
       const date = item.timestamp.split(' ')[0];
       if (!grouped[date]) {
         grouped[date] = { entry: 0, exit: 0, total: 0 };
       }
-      
-      if (item.direction === 'in') {
-        grouped[date].entry += 1;
-      } else if (item.direction === 'out') {
-        grouped[date].exit += 1;
-      }
+
+      if (item.direction === 'in') grouped[date].entry += 1;
+      if (item.direction === 'out') grouped[date].exit += 1;
       grouped[date].total += 1;
     });
 
@@ -93,31 +107,28 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         time: date,
         entry: values.entry,
         exit: values.exit,
-        occupancy: values.total > 0 ? Math.round((values.entry - values.exit) / values.total * 100) : 0,
+        occupancy:
+          values.total > 0
+            ? Math.round(((values.entry - values.exit) / values.total) * 100)
+            : 0,
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // 時系列データの処理
+  // === 時系列データ ===
   let timeSeriesData;
-
   if (isRangeMode && startDate && endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays >= 3) {
-      // 3日以上 → 日ごとに集計
-      timeSeriesData = aggregateDailyData(data);
-    } else {
-      // 3日未満 → 1時間ごとに集計
-      timeSeriesData = aggregateHourlyData(data);
-    }
+    timeSeriesData =
+      diffDays >= 3 ? aggregateDailyData(data) : aggregateHourlyData(data);
   } else {
-    // 単日モード → 1時間ごとに集計
     timeSeriesData = aggregateHourlyData(data);
   }
 
+  // === 地域別データ ===
   const cityData = data.reduce((acc, item) => {
     acc[item.city] = (acc[item.city] || 0) + 1;
     return acc;
@@ -128,13 +139,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     value: count,
   }));
 
-  // --------------------------
-  // 地域別データ
-  // --------------------------
-
-  // --------------------------
-  // 時間帯別滞在時間
-  // --------------------------
+  // === 車種別データ ===
   const vehicleTypeData = data.reduce((acc, item) => {
     acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + 1;
     return acc;
@@ -145,7 +150,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     value: count,
   }));
 
-  // Group by hour for engine size
+  // === 時間帯別エンジンサイズ平均 ===
   const hourlyEngineData = data.reduce((acc, item) => {
     const hour = item.timestamp.split(' ')[1].split(':')[0];
     if (!acc[hour]) acc[hour] = { hour, totalEngineSize: 0, count: 0 };
@@ -154,14 +159,14 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     return acc;
   }, {} as Record<string, { hour: string; totalEngineSize: number; count: number }>);
 
-  const engineSizeData = Object.values(hourlyEngineData).map(item => ({
+  const engineSizeData = Object.values(hourlyEngineData).map((item) => ({
     hour: `${item.hour}:00`,
     avgEngineSize: Math.round(item.totalEngineSize / item.count),
   }));
 
   return (
     <div className="space-y-8">
-      {/* Parking Flow Chart */}
+      {/* === 入庫・出庫・満車率グラフ === */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">
           入庫・出庫数および満車率の推移
@@ -173,39 +178,40 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         </h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={timeSeriesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <LineChart
+              data={timeSeriesData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="time" 
+              <XAxis
+                dataKey="time"
                 tick={{ fontSize: 12 }}
                 angle={-45}
                 textAnchor="end"
                 height={60}
               />
-              <YAxis 
-                yAxisId="left" 
+              <YAxis
+                yAxisId="left"
                 tick={{ fontSize: 12 }}
                 label={{ value: '台数', angle: -90, position: 'insideLeft' }}
               />
-              <YAxis 
-                yAxisId="right" 
-                orientation="right" 
+              <YAxis
+                yAxisId="right"
+                orientation="right"
                 tick={{ fontSize: 12 }}
                 label={{ value: '満車率 (%)', angle: 90, position: 'insideRight' }}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'white',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
-              formatter={(value, name) => {
-                if (name === '満車率 (%)') {
-                  return [`${value}%`, name];
-                }
-                return [`${value}台`, name];
-              }}
+                formatter={(value, name) => {
+                  if (name === '満車率 (%)') return [`${value}%`, name];
+                  return [`${value}台`, name];
+                }}
               />
               <Legend />
               <Line
@@ -215,8 +221,6 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                 stroke="#3B82F6"
                 strokeWidth={3}
                 name="入庫数"
-                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
               />
               <Line
                 yAxisId="left"
@@ -225,8 +229,6 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                 stroke="#10B981"
                 strokeWidth={3}
                 name="出庫数"
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2 }}
               />
               <Line
                 yAxisId="right"
@@ -235,126 +237,18 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                 stroke="#F59E0B"
                 strokeWidth={3}
                 name="満車率 (%)"
-                dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#F59E0B', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
+      {/* === グリッドエリア === */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-
-        {/* Vehicle Type Distribution */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <Pie
-                  data={[{ name: '乗用車', value: data.length }]}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {[{ name: '乗用車', value: data.length }].map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* City Distribution */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">地域別構成</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <Pie
-                data={cityPieData}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-              >
-                {cityPieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
-              />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Average Engine Size */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">時間帯別平均エンジンサイズ</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={engineSizeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="hour" 
-                tick={{ fontSize: 12 }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                label={{ value: 'エンジンサイズ (cc)', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip 
-                formatter={(value) => [`${value}cc`, '平均エンジンサイズ']}
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
-              />
-              <Bar 
-                dataKey="avgEngineSize" 
-                fill="#3B82F6" 
-                radius={[4, 4, 0, 0]}
-                stroke="#2563EB"
-                strokeWidth={1}
-              />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        {/* 今後グラフを追加する場合はここに */}
       </div>
 
+      {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
     </div>
   );

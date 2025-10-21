@@ -68,12 +68,12 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
     },
     {
       key: 'engine_size',
-      label: 'エンジンサイズ',
+      label: '分類番号',
       sortable: true,
       render: (value: number) => (
         <div className="text-center">
           <span className="font-medium">{value}</span>
-          <span className="text-sm text-gray-500 ml-1">cc</span>
+          <span className="text-sm text-gray-500 ml-1"></span>
         </div>
       )
     },

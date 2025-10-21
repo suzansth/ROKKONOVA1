@@ -85,8 +85,9 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
           } else if (dataType === 'parking') {
             if (['object_id', 'engine_size'].includes(header)) {
               value = parseInt(value);
+            }
           }
-          
+
           row[header] = value;
         });
         
