@@ -9,9 +9,9 @@ import { useCsvData } from './hooks/useCsvData';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'traffic' | 'parking'>('traffic');
-  const [selectedDate, setSelectedDate] = useState('2025-08-16');
-  const [startDate, setStartDate] = useState('2025-08-16');
-  const [endDate, setEndDate] = useState('2025-08-16');
+  const [selectedDate, setSelectedDate] = useState('2024-01-15');
+  const [startDate, setStartDate] = useState('2024-01-15');
+  const [endDate, setEndDate] = useState('2024-01-15');
   const [isRangeMode, setIsRangeMode] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   
