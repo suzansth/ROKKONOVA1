@@ -1,14 +1,37 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { TrafficData } from '../types';
+import { useTrafficData } from '../hooks/useApi';
+import LoadingSpinner from './LoadingSpinner';
+import ErrorMessage from './ErrorMessage';
+import TrafficDataTable from './TrafficDataTable';
 
 interface TrafficDashboardProps {
-  data: TrafficData[];
+  selectedDate?: string;
+  csvData: TrafficData[];
+  isUsingCsv: boolean;
+  startDate: string;
+  endDate: string;
+  isRangeMode: boolean;
 }
 
-const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ data }) => {
+const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ 
+  selectedDate, 
+  csvData, 
+  isUsingCsv, 
+  startDate, 
+  endDate, 
+  isRangeMode 
+}) => {
+  const { data: apiData, loading, error } = useTrafficData(selectedDate, startDate, endDate, isRangeMode);
+  
+  // Use CSV data if available, otherwise use API data
+  const data = isUsingCsv ? csvData : (apiData || []);
+
   // 時間別集計データの生成
   const hourlyData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const hourlyMap = new Map<string, { hour: string; count: number; avgSpeed: number; totalSpeed: number; speedCount: number }>();
     
     data.forEach(item => {
@@ -30,6 +53,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ data }) => {
 
   // 日別集計データの生成
   const dailyData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const dailyMap = new Map<string, { date: string; count: number; avgSpeed: number; totalSpeed: number; speedCount: number }>();
     
     data.forEach(item => {
@@ -51,6 +76,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ data }) => {
 
   // 車種別データの生成
   const vehicleTypeData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const typeMap = new Map<string, number>();
     
     data.forEach(item => {
@@ -63,6 +90,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ data }) => {
 
   // 方向別データの生成
   const directionData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const directionMap = new Map<string, number>();
     
     data.forEach(item => {
@@ -75,7 +104,15 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ data }) => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-  if (data.length === 0) {
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
+
+  if (!data || data.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">交通量ダッシュボード</h2>
@@ -248,6 +285,9 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({ data }) => {
           </div>
         </div>
       </div>
+
+      {/* データテーブル */}
+      <TrafficDataTable data={data} />
     </div>
   );
 };
