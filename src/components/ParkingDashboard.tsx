@@ -45,7 +45,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 
   if (loading) return <LoadingSpinner />;
   if (error)
-    return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+    return <ErrorMessage message={`駐車場データの取得に失敗しました: ${error}`} />;
 
   if (!data || data.length === 0) {
     return (

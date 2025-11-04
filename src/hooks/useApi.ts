@@ -5,6 +5,11 @@ const API_BASE_URL = 'http://localhost:3001/api';
 
 // Helper function to filter data by date range
 const filterDataByDateRange = (data: any[], startDate?: string, endDate?: string, isRangeMode?: boolean, singleDate?: string) => {
+  // Ensure data is an array
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  
   if (isRangeMode && startDate && endDate) {
     return data.filter(item => {
       const itemDate = item.timestamp ? item.timestamp.split(' ')[0] : item.date;
@@ -54,9 +59,10 @@ export const useTrafficData = (
         if (!response.ok) throw new Error('Failed to fetch traffic data');
         const result = await response.json();
         const filteredData = filterDataByDateRange(result, startDate, endDate, isRangeMode, date);
-        setData(result);
+        setData(filteredData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'データの取得中にエラーが発生しました');
+        setData([]);
       } finally {
         setLoading(false);
       }
@@ -103,9 +109,10 @@ export const useParkingData = (
         if (!response.ok) throw new Error('Failed to fetch parking data');
         const result = await response.json();
         const filteredData = filterDataByDateRange(result, startDate, endDate, isRangeMode, date);
-        setData(result);
+        setData(filteredData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'データの取得中にエラーが発生しました');
+        setData([]);
       } finally {
         setLoading(false);
       }
