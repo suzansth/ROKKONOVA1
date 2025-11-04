@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ReferenceLine } from 'recharts';
 import { useTrafficData } from '../hooks/useApi';
 import { TrafficData } from '../types';
 import LoadingSpinner from './LoadingSpinner';
@@ -112,6 +112,14 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     // 単日表示: 1時間ごとに集計
     timeSeriesData = aggregateHourlyData(data);
   }
+  // 渋滞判定のための色分け関数
+  const getSpeedColor = (speed: number) => {
+    return speed <= 30 ? '#EF4444' : '#10B981'; // 30km/h以下は赤色、それ以上は緑色
+  };
+
+  // 渋滞データポイントの識別
+  const trafficJamPoints = timeSeriesData.filter(item => item.speed <= 30);
+  const normalTrafficPoints = timeSeriesData.filter(item => item.speed > 30);
 
   const vehicleTypeData = data.reduce((acc, item) => {
     acc[item.class_name] = (acc[item.class_name] || 0) + 1;
@@ -130,6 +138,9 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">
           交通量・平均速度の推移
+          <span className="text-sm font-normal text-gray-600 ml-4">
+            🔴 渋滞（30km/h以下） 🟢 正常（30km/h超）
+          </span>
           {isRangeMode && startDate && endDate && (
             <span className="text-sm font-normal text-gray-600 ml-2">
               ({startDate} ～ {endDate})
@@ -167,12 +178,22 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 }}
                 formatter={(value, name) => {
                   if (name === '平均速度 (km/h)') {
-                    return [`${value} km/h`, name];
+                    const speed = Number(value);
+                    const status = speed <= 30 ? ' 🔴 渋滞' : ' 🟢 正常';
+                    return [`${value} km/h${status}`, name];
                   }
                   return [`${value}台`, name];
                 }}
               />
               <Legend />
+              {/* 渋滞基準線 */}
+              <ReferenceLine 
+                yAxisId="right" 
+                y={30} 
+                stroke="#EF4444" 
+                strokeDasharray="5 5" 
+                label={{ value: "渋滞基準 (30km/h)", position: "topRight", fill: "#EF4444", fontSize: 12 }}
+              />
               <Line
                 yAxisId="left"
                 type="monotone"
@@ -190,12 +211,54 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 stroke="#10B981"
                 strokeWidth={3}
                 name="平均速度 (km/h)"
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2 }}
+                dot={(props) => {
+                  const { cx, cy, payload } = props;
+                  const color = getSpeedColor(payload.speed);
+                  return (
+                    <circle 
+                      cx={cx} 
+                      cy={cy} 
+                      r={4} 
+                      fill={color} 
+                      stroke={color} 
+                      strokeWidth={2}
+                    />
+                  );
+                }}
+                activeDot={(props) => {
+                  const { cx, cy, payload } = props;
+                  const color = getSpeedColor(payload.speed);
+                  return (
+                    <circle 
+                      cx={cx} 
+                      cy={cy} 
+                      r={6} 
+                      fill={color} 
+                      stroke={color} 
+                      strokeWidth={2}
+                    />
+                  );
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
+        
+        {/* 渋滞情報サマリー */}
+        {trafficJamPoints.length > 0 && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <h4 className="text-sm font-semibold text-red-800">渋滞検出</h4>
+            </div>
+            <p className="text-sm text-red-700 mt-1">
+              {trafficJamPoints.length}個の時間帯で渋滞が検出されました（平均速度30km/h以下）
+            </p>
+            <div className="mt-2 text-xs text-red-600">
+              渋滞時間帯: {trafficJamPoints.map(point => point.time).join(', ')}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Vehicle Type Distribution */}
