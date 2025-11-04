@@ -70,13 +70,9 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
       sortable: true,
       render: (value: string) => (
         <div className="text-center">
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              value === 'R'
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-green-100 text-green-800'
-            }`}
-          >
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            value === 'R' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+          }`}>
             {value === 'R' ? '右' : '左'}
           </span>
         </div>
@@ -87,26 +83,13 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
       label: '通過速度',
       sortable: true,
       render: (value: number) => (
-        <div
-          className={`text-center ${
-            value <= 30 ? 'text-red-600 font-bold' : 'text-gray-900'
-          }`}
-        >
-          <span className="text-lg">{value.toFixed(1)}</span>
+        <div className="text-center">
+          <span className="text-lg font-semibold text-gray-900">{value.toFixed(1)}</span>
           <span className="text-sm text-gray-500 ml-1">km/h</span>
-          {value <= 30 && (
-            <div className="text-xs text-red-500 mt-1">渋滞中</div>
-          )}
         </div>
       )
     }
   ];
-
-  // 速度が30km/h以下の行に薄い赤色背景を付ける
-  const highlightedData = data.map((item) => ({
-    ...item,
-    rowClass: item.speed_kmh <= 30 ? 'bg-red-50' : ''
-  }));
 
   return (
     <div className={className}>
@@ -114,11 +97,9 @@ const TrafficDataTable: React.FC<TrafficDataTableProps> = ({ data, className }) 
         <h3 className="text-lg font-semibold text-gray-900">交通量データ詳細</h3>
         <p className="text-sm text-gray-600 mt-1">
           1時間ごとに集計された交通量データの詳細情報です。列ヘッダーをクリックしてソートできます。
-          <br />
-          <span className="text-red-500 font-semibold">※赤色の行は渋滞状態（平均速度30km/h以下）</span>
         </p>
       </div>
-      <DataTable data={highlightedData} columns={columns} itemsPerPage={15} />
+      <DataTable data={data} columns={columns} itemsPerPage={15} />
     </div>
   );
 };
