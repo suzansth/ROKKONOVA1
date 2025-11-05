@@ -351,11 +351,11 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-            <span className="text-sm text-gray-700">混雑 (10-30km/h)</span>
+            <span className="text-sm text-gray-700">混雑 (20-30km/h)</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-red-500 rounded"></div>
-            <span className="text-sm text-gray-700">渋滞 (10km/h未満)</span>
+            <span className="text-sm text-gray-700">渋滞 (20km/h未満)</span>
           </div>
         </div>
       </div>
