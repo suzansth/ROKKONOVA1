@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import { useTrafficData } from '../hooks/useApi';
 import { TrafficData } from '../types';
 import LoadingSpinner from './LoadingSpinner';
@@ -92,6 +92,53 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       isRangeMode ? "選択した期間の交通データがありません" : "選択した日付の交通データがありません"
     } />;
   }
+
+  // ====== 時間帯別データの処理 ======
+  const hourlyData = React.useMemo(() => {
+    if (isRangeMode && startDate && endDate) {
+      // 期間選択時：時間帯ごとに平均速度を計算
+      const hourlyGroups: Record<string, { totalSpeed: number; count: number }> = {};
+      
+      data.forEach(item => {
+        const hour = item.timestamp.split(' ')[1].split(':')[0];
+        const hourKey = `${hour}時`;
+        
+        if (!hourlyGroups[hourKey]) {
+          hourlyGroups[hourKey] = { totalSpeed: 0, count: 0 };
+        }
+        
+        hourlyGroups[hourKey].totalSpeed += item.avg_speed;
+        hourlyGroups[hourKey].count += 1;
+      });
+      
+      return Object.entries(hourlyGroups)
+        .map(([hour, values]) => ({
+          hour,
+          avgSpeed: Math.round(values.totalSpeed / values.count * 10) / 10
+        }))
+        .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+    } else {
+      // 単日表示：各時間帯のデータをそのまま使用
+      return data.map(item => ({
+        hour: `${item.timestamp.split(' ')[1].split(':')[0]}時`,
+        avgSpeed: item.avg_speed
+      }));
+    }
+  }, [data, isRangeMode, startDate, endDate]);
+
+  // 交通状況の判定関数
+  const getTrafficStatus = (speed: number) => {
+    if (speed >= 30) return { status: '普通', color: '#10B981' }; // 緑
+    if (speed >= 10) return { status: '混雑', color: '#F59E0B' }; // 黄色
+    return { status: '渋滞', color: '#EF4444' }; // 赤
+  };
+
+  // 棒グラフ用のデータ準備
+  const trafficStatusData = hourlyData.map(item => ({
+    ...item,
+    ...getTrafficStatus(item.avgSpeed),
+    height: 100 // 固定の高さ
+  }));
 
   // ---- Process data for charts ----
   let timeSeriesData;
@@ -234,6 +281,80 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
+      {/* Traffic Status Bar Chart */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">
+          時間帯別交通状況
+          {isRangeMode && startDate && endDate && (
+            <span className="text-sm font-normal text-gray-600 ml-2">
+              ({startDate} ～ {endDate} の平均)
+            </span>
+          )}
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={trafficStatusData} 
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="hour" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                formatter={(value, name, props) => [
+                  `${props.payload.avgSpeed} km/h`,
+                  '平均速度'
+                ]}
+                labelFormatter={(label, payload) => {
+                  if (payload && payload.length > 0) {
+                    const status = payload[0].payload.status;
+                    return `${label} - 状態: ${status}`;
+                  }
+                  return label;
+                }}
+              />
+              <Bar 
+                dataKey="height" 
+                fill={(entry) => entry.color}
+                radius={[4, 4, 0, 0]}
+                stroke="#fff"
+                strokeWidth={1}
+              >
+                {trafficStatusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        
+        {/* 凡例 */}
+        <div className="mt-4 flex justify-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <span className="text-sm text-gray-700">普通 (30km/h以上)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+            <span className="text-sm text-gray-700">混雑 (10-30km/h)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 bg-red-500 rounded"></div>
+            <span className="text-sm text-gray-700">渋滞 (10km/h未満)</span>
+          </div>
+        </div>
+      </div>
       {/* データテーブル */}
       <TrafficDataTable data={data} className="mt-8" />
     </div>
