@@ -132,8 +132,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
   // 交通状況の判定関数
   const getTrafficStatus = (speed: number) => {
-    if (speed >= 40) return { status: '普通', color: '#10B981' }; // 緑
-    if (speed >= 30) return { status: '混雑', color: '#F59E0B' }; // 黄色
+    if (speed >= 30) return { status: '普通', color: '#10B981' }; // 緑
+    if (speed >= 20) return { status: '混雑', color: '#F59E0B' }; // 黄色
     return { status: '渋滞', color: '#EF4444' }; // 赤
   };
 
