@@ -1,219 +1,96 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   BarChart,
   Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
   LabelList,
+  ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTrafficData } from "../hooks/useTrafficData";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { ErrorMessage } from "@/components/ErrorMessage";
-import { TrafficDataTable } from "./TrafficDataTable";
-import { format } from "date-fns";
-import { ja } from "date-fns/locale";
 
-interface TrafficDashboardProps {
-  selectedDate: Date | null;
-  csvData: any[];
-  isUsingCsv: boolean;
-  startDate?: Date | null;
-  endDate?: Date | null;
-  isRangeMode?: boolean;
+interface TrafficData {
+  time: string;
+  speed: number;
+  status: string;
 }
 
-export const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
-  selectedDate,
-  csvData,
-  isUsingCsv,
-  startDate,
-  endDate,
-  isRangeMode,
-}) => {
-  const { data, loading, error } = useTrafficData(
-    selectedDate,
-    csvData,
-    isUsingCsv,
-    startDate,
-    endDate,
-    isRangeMode
-  );
+export const TrafficDashboard: React.FC = () => {
+  const [data, setData] = useState<TrafficData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [timeRange, setTimeRange] = useState("hourly");
+  // CSVファイルを直接読み込む
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/data/traffic.csv"); // CSVファイルのパスを調整してください
+        if (!res.ok) throw new Error("Failed to fetch CSV file");
+        const text = await res.text();
 
-  if (loading) return <LoadingSpinner />;
-  if (error)
-    return (
-      <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />
-    );
-  if (!data || data.length === 0)
-    return <ErrorMessage message="データがありません。" />;
+        // CSVの解析
+        const rows = text
+          .split("\n")
+          .slice(1)
+          .filter((line) => line.trim() !== "")
+          .map((row) => row.split(","));
 
-  // 🧮 データ加工：平均速度などを追加
-  const trafficStatusData = useMemo(() => {
-    return data.map((item: any) => {
-      const avgSpeed = item.avg_speed ?? item.speed_kmh ?? 0;
-      let status = "";
-      let color = "";
+        const parsedData = rows.map(([time, speed, status]) => ({
+          time,
+          speed: parseFloat(speed),
+          status,
+        }));
 
-      if (avgSpeed >= 30) {
-        status = "通常";
-        color = "#10B981"; // 緑
-      } else if (avgSpeed >= 10) {
-        status = "混雑";
-        color = "#F59E0B"; // 黄
-      } else {
-        status = "渋滞";
-        color = "#EF4444"; // 赤
+        setData(parsedData);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      return {
-        time: item.hour ? `${item.hour}時` : item.date,
-        height: 100, // 棒の高さは固定（見た目用）
-        avgSpeed,
-        status,
-        color,
-      };
-    });
-  }, [data]);
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center mt-10 text-gray-500">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* 🚗 時間帯別交通状況 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>時間帯別交通状況</CardTitle>
-        </CardHeader>
-
-        <CardContent className="h-[400px]">
-          {trafficStatusData && trafficStatusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={trafficStatusData}
-                margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis hide />
-                <Tooltip
-                  formatter={(value: any, name: any) =>
-                    name === "avgSpeed" ? `${value} km/h` : value
-                  }
-                />
-                <Legend />
-
-                <Bar dataKey="height" radius={[4, 4, 0, 0]}>
-                  {trafficStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-
-                  {/* ✅ 平均速度を棒の中央に表示 */}
-                  <LabelList
-                    dataKey="avgSpeed"
-                    position="inside"
-                    formatter={(value: number | undefined) =>
-                      value !== undefined ? `${value} km/h` : ""
-                    }
-                    style={{
-                      fill: "white",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      textAnchor: "middle",
-                    }}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <ErrorMessage message="交通状況データがありません。" />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 📊 折れ線グラフ：交通量・平均速度 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>交通量と平均速度の推移</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={data.map((item) => ({
-                time: item.hour ? `${item.hour}時` : item.date,
-                traffic_volume: item.traffic_volume ?? 0,
-                avg_speed: item.avg_speed ?? item.speed_kmh ?? 0,
-              }))}
-              margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="traffic_volume"
-                stroke="#3B82F6"
-                name="交通量（台数）"
-                strokeWidth={2}
+    <Card className="p-4 shadow-lg rounded-2xl">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold text-center text-gray-700">
+          時間帯別交通状況（平均速度表示付き）
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={data} margin={{ top: 30, right: 20, left: 20, bottom: 30 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" label={{ value: "時間帯", position: "insideBottom", dy: 20 }} />
+            <YAxis label={{ value: "速度 (km/h)", angle: -90, position: "insideLeft" }} />
+            <Tooltip
+              formatter={(value: number) => `${value} km/h`}
+              labelFormatter={(label) => `時間帯: ${label}`}
+            />
+            <Bar dataKey="speed" fill="#8884d8" radius={[10, 10, 0, 0]}>
+              {/* 棒の中央に平均速度を表示 */}
+              <LabelList
+                dataKey="speed"
+                position="center"
+                formatter={(value: number) => `${value.toFixed(1)} km/h`}
+                style={{ fill: "white", fontSize: 12, fontWeight: "bold" }}
               />
-              <Line
-                type="monotone"
-                dataKey="avg_speed"
-                stroke="#F59E0B"
-                name="平均速度（km/h）"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* 🥧 車種別構成（例） */}
-      <Card>
-        <CardHeader>
-          <CardTitle>車種別構成比</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[400px] flex justify-center items-center">
-          <ResponsiveContainer width="60%" height="100%">
-            <PieChart>
-              <Pie
-                data={[
-                  { name: "乗用車", value: 65 },
-                  { name: "トラック", value: 25 },
-                  { name: "バス", value: 10 },
-                ]}
-                cx="50%"
-                cy="50%"
-                outerRadius={120}
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(1)}%`
-                }
-                dataKey="value"
-              >
-                <Cell fill="#3B82F6" />
-                <Cell fill="#F59E0B" />
-                <Cell fill="#10B981" />
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* 📋 データテーブル */}
-      <TrafficDataTable data={data} className="mt-8" />
-    </div>
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 };
