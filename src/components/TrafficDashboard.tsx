@@ -347,15 +347,15 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         <div className="mt-4 flex justify-center space-x-6">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-green-500 rounded"></div>
-            <span className="text-sm text-gray-700">普通 (30km/h以上)</span>
+            <span className="text-sm text-gray-700">普通 (40km/h以上)</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-            <span className="text-sm text-gray-700">混雑 (20-30km/h)</span>
+            <span className="text-sm text-gray-700">混雑 (30-40km/h)</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-red-500 rounded"></div>
-            <span className="text-sm text-gray-700">渋滞 (20km/h未満)</span>
+            <span className="text-sm text-gray-700">渋滞 (30km/h未満)</span>
           </div>
         </div>
       </div>
