@@ -9,7 +9,6 @@ import {
   LabelList,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface TrafficData {
   time: string;
@@ -22,15 +21,13 @@ export const TrafficDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // CSVファイルを直接読み込む
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/data/traffic.csv"); // CSVファイルのパスを調整してください
+        const res = await fetch("/data/traffic.csv"); // CSVファイルのパス
         if (!res.ok) throw new Error("Failed to fetch CSV file");
         const text = await res.text();
 
-        // CSVの解析
         const rows = text
           .split("\n")
           .slice(1)
@@ -54,43 +51,33 @@ export const TrafficDashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return <div className="text-center mt-10 text-gray-500">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
-  }
+  if (loading) return <div className="text-center mt-10 text-gray-500">Loading...</div>;
+  if (error) return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
 
   return (
-    <Card className="p-4 shadow-lg rounded-2xl">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold text-center text-gray-700">
-          時間帯別交通状況（平均速度表示付き）
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={data} margin={{ top: 30, right: 20, left: 20, bottom: 30 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" label={{ value: "時間帯", position: "insideBottom", dy: 20 }} />
-            <YAxis label={{ value: "速度 (km/h)", angle: -90, position: "insideLeft" }} />
-            <Tooltip
-              formatter={(value: number) => `${value} km/h`}
-              labelFormatter={(label) => `時間帯: ${label}`}
+    <div className="p-6 bg-white rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">
+        時間帯別交通状況（平均速度付き）
+      </h2>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={data} margin={{ top: 30, right: 20, left: 20, bottom: 30 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="time" label={{ value: "時間帯", position: "insideBottom", dy: 20 }} />
+          <YAxis label={{ value: "速度 (km/h)", angle: -90, position: "insideLeft" }} />
+          <Tooltip
+            formatter={(value: number) => `${value} km/h`}
+            labelFormatter={(label) => `時間帯: ${label}`}
+          />
+          <Bar dataKey="speed" fill="#8884d8" radius={[10, 10, 0, 0]}>
+            <LabelList
+              dataKey="speed"
+              position="center"
+              formatter={(value: number) => `${value.toFixed(1)} km/h`}
+              style={{ fill: "white", fontSize: 12, fontWeight: "bold" }}
             />
-            <Bar dataKey="speed" fill="#8884d8" radius={[10, 10, 0, 0]}>
-              {/* 棒の中央に平均速度を表示 */}
-              <LabelList
-                dataKey="speed"
-                position="center"
-                formatter={(value: number) => `${value.toFixed(1)} km/h`}
-                style={{ fill: "white", fontSize: 12, fontWeight: "bold" }}
-              />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
