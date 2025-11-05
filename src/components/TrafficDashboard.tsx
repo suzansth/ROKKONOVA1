@@ -316,17 +316,15 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                 }}
-                formatter={(value, name, props) => [
-                  `${props.payload.avgSpeed} km/h`,
-                  '平均速度'
-                ]}
-                labelFormatter={(label, payload) => {
-                  if (payload && payload.length > 0) {
-                    const status = payload[0].payload.status;
-                    return `${label} - 状態: ${status}`;
-                  }
-                  return label;
+                formatter={(value, name, props) => {
+                  const speed = props.payload.avgSpeed;
+                  const status = props.payload.status;
+                  return [
+                    `${speed} km/h (${status})`,
+                    '平均速度'
+                  ];
                 }}
+                labelFormatter={(label) => `時間帯: ${label}`}
               />
               <Bar 
                 dataKey="height" 
