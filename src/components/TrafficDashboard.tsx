@@ -85,16 +85,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     isRangeMode
   );
 
-  if (loading) return <LoadingSpinner />;
-　if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
-  if (!data || data.length === 0) {
-    return <ErrorMessage message={
-      isRangeMode ? "選択した期間の交通データがありません" : "選択した日付の交通データがありません"
-    } />;
-  }
-
   // ====== 時間帯別データの処理 ======
   const hourlyData = React.useMemo(() => {
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
     if (isRangeMode && startDate && endDate) {
       // 期間選択時：時間帯ごとに平均速度を計算
       const hourlyGroups: Record<string, { totalSpeed: number; count: number }> = {};
@@ -125,6 +121,14 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       }));
     }
   }, [data, isRangeMode, startDate, endDate]);
+
+  if (loading) return <LoadingSpinner />;
+　if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+  if (!data || data.length === 0) {
+    return <ErrorMessage message={
+      isRangeMode ? "選択した期間の交通データがありません" : "選択した日付の交通データがありません"
+    } />;
+  }
 
   // 交通状況の判定関数
   const getTrafficStatus = (speed: number) => {
