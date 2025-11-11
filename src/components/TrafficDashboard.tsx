@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell, Legend, BarChart, Bar
 } from 'recharts';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
@@ -25,14 +25,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   startDate,
   endDate
 }) => {
-
-  // ✅ Hooks は常に上部で固定して呼び出す
   const data = csvData || [];
   const loading = false;
   const error = undefined;
   const [currentPage, setCurrentPage] = React.useState(0);
 
-  // ====== useMemo / useEffect などは常に呼ばれる ======
+  // ==== 平均速度（時間ごと）====
   const hourlyData = React.useMemo(() => {
     if (!data || data.length === 0) return [];
     const grouped: Record<string, { totalSpeed: number; count: number }> = {};
@@ -51,6 +49,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
   }, [data]);
 
+  // ==== 範囲モード用 ====
   const dailyTrafficData = React.useMemo(() => {
     if (!isRangeMode || !data || data.length === 0) return [];
     const groupedByDate: Record<string, TrafficData[]> = {};
@@ -90,6 +89,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     return { status: '渋滞', color: '#EF4444' };
   };
 
+  // ==== 時間帯ごとのデータ ====
   const timeSeriesData = React.useMemo(() => {
     if (!data || data.length === 0) return [];
     const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
@@ -111,6 +111,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [data]);
 
+  // ==== 車種別構成 ====
   const vehicleTypeData = React.useMemo(() => {
     if (!data || data.length === 0) return [];
     const result = data.reduce((acc, item) => {
@@ -123,7 +124,24 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     }));
   }, [data]);
 
-  // ====== JSX（条件分岐はここに集約） ======
+  // ==== 渋滞割合グラフ用データ ====
+  const congestionData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    let normal = 0, busy = 0, jam = 0;
+    data.forEach(item => {
+      if (item.speed_kmh >= 30) normal++;
+      else if (item.speed_kmh >= 20) busy++;
+      else jam++;
+    });
+    const total = normal + busy + jam;
+    return [
+      { name: '普通', value: Math.round((normal / total) * 100) },
+      { name: '混雑', value: Math.round((busy / total) * 100) },
+      { name: '渋滞', value: Math.round((jam / total) * 100) },
+    ];
+  }, [data]);
+
+  // ===== JSX =====
   return (
     <div className="space-y-8">
       {loading && <LoadingSpinner />}
@@ -151,6 +169,35 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                   <Line yAxisId="left" type="monotone" dataKey="count" stroke="#3B82F6" />
                   <Line yAxisId="right" type="monotone" dataKey="speed" stroke="#10B981" />
                 </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 渋滞割合グラフ（棒グラフ） */}
+          <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">渋滞割合グラフ</h3>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={congestionData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis unit="%" />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#F59E0B">
+                    {congestionData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.name === '普通'
+                            ? '#10B981'
+                            : entry.name === '混雑'
+                            ? '#F59E0B'
+                            : '#EF4444'
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
