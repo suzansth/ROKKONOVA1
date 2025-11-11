@@ -323,8 +323,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
           </div>
         )}
       </div>
-
-
       {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
