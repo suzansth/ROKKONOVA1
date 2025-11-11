@@ -30,37 +30,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   const loading = false;
   const error = undefined;
 
-  // ====== データ集計関数 ======
-  const aggregateHourlyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
-
-    data.forEach(item => {
-      const hour = item.timestamp.split(' ')[1].split(':')[0];
-      const timeKey = `${hour}:00`;
-      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
-      grouped[timeKey].vehicleCount += 1;
-      grouped[timeKey].totalSpeed += item.speed_kmh;
-      grouped[timeKey].speedCount += 1;
-    });
-
-    return Object.entries(grouped)
-      .map(([time, data]) => ({
-        time,
-        count: data.vehicleCount,
-        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time));
-  };
-
-  // ====== ローディング・エラーハンドリング ======
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
-  if (!data || data.length === 0)
-    return (
-      <ErrorMessage message={isRangeMode ? '選択した期間の交通データがありません' : '選択した日付の交通データがありません'} />
-    );
-
-  // ====== 時間帯別データ ======
+  // ====== 時間帯別データ（単日用） ======
   const hourlyData = React.useMemo(() => {
     const grouped: Record<string, { totalSpeed: number; count: number }> = {};
     data.forEach(item => {
@@ -78,9 +48,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
   }, [data]);
 
-  // ====== 期間選択時・日別データ ======
+  // ====== 期間選択時の日別データ ======
   const dailyTrafficData = React.useMemo(() => {
-    if (!isRangeMode || !data.length) return [];
     const groupedByDate: Record<string, TrafficData[]> = {};
     data.forEach(item => {
       const date = item.timestamp.split(' ')[0];
@@ -97,17 +66,15 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         hourlyGrouped[key].totalSpeed += item.speed_kmh;
         hourlyGrouped[key].count += 1;
       });
-
       const hourlyData = Object.entries(hourlyGrouped)
         .map(([hour, val]) => ({
           hour,
           avgSpeed: Math.round((val.totalSpeed / val.count) * 10) / 10
         }))
         .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
-
       return { date, hourlyData };
     }).sort((a, b) => a.date.localeCompare(b.date));
-  }, [data, isRangeMode]);
+  }, [data]);
 
   // ====== ページネーション ======
   const daysPerPage = 3;
@@ -132,6 +99,24 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   }));
 
   // ====== 折れ線グラフ用 ======
+  const aggregateHourlyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
+    data.forEach(item => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0];
+      const timeKey = `${hour}:00`;
+      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
+      grouped[timeKey].vehicleCount += 1;
+      grouped[timeKey].totalSpeed += item.speed_kmh;
+      grouped[timeKey].speedCount += 1;
+    });
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.vehicleCount,
+        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
   const timeSeriesData = aggregateHourlyData(data);
 
   // ====== 円グラフ用 ======
@@ -139,11 +124,18 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     acc[item.class_name] = (acc[item.class_name] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-
   const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
     name: type,
     value: count
   }));
+
+  // ====== ローディング・エラーハンドリング ======
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+  if (!data || data.length === 0)
+    return (
+      <ErrorMessage message={isRangeMode ? '選択した期間の交通データがありません' : '選択した日付の交通データがありません'} />
+    );
 
   // ====== 描画 ======
   return (
@@ -167,29 +159,26 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
-      {/* 棒グラフ */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">時間帯別交通状況</h3>
-        {isRangeMode && totalPages > 1 && (
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-              disabled={currentPage === 0}
-              className="flex items-center px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-md"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" /> 前へ
-            </button>
-            <span className="text-sm text-gray-600">{currentPage + 1} / {totalPages}</span>
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-              disabled={currentPage === totalPages - 1}
-              className="flex items-center px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-md"
-            >
-              次へ <ChevronRight className="h-4 w-4 ml-1" />
-            </button>
-          </div>
-        )}
-      </div>
+      {/* ページネーションボタン */}
+      {isRangeMode && totalPages > 1 && (
+        <div className="flex items-center justify-end space-x-4">
+          <button
+            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+            disabled={currentPage === 0}
+            className="flex items-center px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-md"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" /> 前へ
+          </button>
+          <span className="text-sm text-gray-600">{currentPage + 1} / {totalPages}</span>
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+            disabled={currentPage === totalPages - 1}
+            className="flex items-center px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-md"
+          >
+            次へ <ChevronRight className="h-4 w-4 ml-1" />
+          </button>
+        </div>
+      )}
 
       {/* 日別 or 単日グラフ */}
       {!isRangeMode ? (
