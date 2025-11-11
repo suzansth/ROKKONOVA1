@@ -45,6 +45,9 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   const loading = false;
   const error = undefined;
 
+  // ====== ページネーション用ステート ======
+  const [currentPage, setCurrentPage] = React.useState(0);
+
   // ====== 1時間ごとに集計 ======
   const aggregateHourlyData = (data: TrafficData[]) => {
     const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
@@ -210,7 +213,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
-       {/* 棒グラフ（棒の中に平均速度を表示） */}
+      {/* 棒グラフ（棒の中に平均速度を表示） — カードでラップ */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">時間帯別交通状況</h3>
           {isRangeMode && totalPages > 1 && (
@@ -323,6 +327,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
           </div>
         )}
       </div>
+
       {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
@@ -347,7 +352,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
-     
       <TrafficDataTable data={data} className="mt-8" />
     </div>
   );
