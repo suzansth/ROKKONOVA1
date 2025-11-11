@@ -49,9 +49,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   const aggregateHourlyData = (data: TrafficData[]) => {
     const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
     data.forEach(item => {
-  // ページネーション用のstate
-  const [currentPage, setCurrentPage] = React.useState(0);
-
       const hour = item.timestamp.split(' ')[1].split(':')[0];
       const timeKey = `${hour}:00`;
       if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
