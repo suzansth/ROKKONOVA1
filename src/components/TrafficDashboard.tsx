@@ -26,39 +26,30 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   // ====== ステート ======
   const [currentPage, setCurrentPage] = React.useState(0);
 
+  // ====== データ ======
   const data = csvData || [];
   const loading = false;
   const error = undefined;
 
-  // ====== データ集計関数 ======
-  const aggregateHourlyData = (data: TrafficData[]) => {
+  // ====== 集計関数 ======
+  const aggregateHourlyData = React.useCallback((data: TrafficData[]) => {
     const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
-
     data.forEach(item => {
       const hour = item.timestamp.split(' ')[1].split(':')[0];
-      const timeKey = `${hour}:00`;
-      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
-      grouped[timeKey].vehicleCount += 1;
-      grouped[timeKey].totalSpeed += item.speed_kmh;
-      grouped[timeKey].speedCount += 1;
+      const key = `${hour}:00`;
+      if (!grouped[key]) grouped[key] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
+      grouped[key].vehicleCount += 1;
+      grouped[key].totalSpeed += item.speed_kmh;
+      grouped[key].speedCount += 1;
     });
-
     return Object.entries(grouped)
-      .map(([time, data]) => ({
+      .map(([time, val]) => ({
         time,
-        count: data.vehicleCount,
-        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
+        count: val.vehicleCount,
+        speed: Math.round((val.totalSpeed / val.speedCount) * 10) / 10
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
-  };
-
-  // ====== ローディング・エラーハンドリング ======
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
-  if (!data || data.length === 0)
-    return (
-      <ErrorMessage message={isRangeMode ? '選択した期間の交通データがありません' : '選択した日付の交通データがありません'} />
-    );
+  }, []);
 
   // ====== 時間帯別データ ======
   const hourlyData = React.useMemo(() => {
@@ -80,7 +71,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
   // ====== 期間選択時・日別データ ======
   const dailyTrafficData = React.useMemo(() => {
-    if (!isRangeMode || !data.length) return [];
+    if (!isRangeMode || data.length === 0) return [];
+
     const groupedByDate: Record<string, TrafficData[]> = {};
     data.forEach(item => {
       const date = item.timestamp.split(' ')[0];
@@ -114,36 +106,34 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   const totalPages = Math.ceil(dailyTrafficData.length / daysPerPage);
   const currentDays = dailyTrafficData.slice(currentPage * daysPerPage, (currentPage + 1) * daysPerPage);
 
-  React.useEffect(() => {
-    setCurrentPage(0);
-  }, [startDate, endDate, isRangeMode]);
+  React.useEffect(() => setCurrentPage(0), [startDate, endDate, isRangeMode]);
 
   // ====== 交通状況分類 ======
-  const getTrafficStatus = (speed: number) => {
+  const getTrafficStatus = React.useCallback((speed: number) => {
     if (speed >= 30) return { status: '普通', color: '#10B981' };
     if (speed >= 20) return { status: '混雑', color: '#F59E0B' };
     return { status: '渋滞', color: '#EF4444' };
-  };
+  }, []);
 
-  const singleDayStatusData = hourlyData.map(item => ({
-    ...item,
-    ...getTrafficStatus(item.avgSpeed),
-    height: 100
-  }));
+  const singleDayStatusData = React.useMemo(() => 
+    hourlyData.map(item => ({ ...item, ...getTrafficStatus(item.avgSpeed), height: 100 })),
+    [hourlyData, getTrafficStatus]
+  );
 
-  // ====== 折れ線グラフ用 ======
-  const timeSeriesData = aggregateHourlyData(data);
+  const timeSeriesData = React.useMemo(() => aggregateHourlyData(data), [data, aggregateHourlyData]);
 
-  // ====== 円グラフ用 ======
-  const vehicleTypeData = data.reduce((acc, item) => {
-    acc[item.class_name] = (acc[item.class_name] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const vehicleTypeData = React.useMemo(() => {
+    const acc: Record<string, number> = {};
+    data.forEach(item => acc[item.class_name] = (acc[item.class_name] || 0) + 1);
+    return Object.entries(acc).map(([name, value]) => ({ name, value }));
+  }, [data]);
 
-  const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
-    name: type,
-    value: count
-  }));
+  // ====== ローディング・エラーハンドリング ======
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
+  if (!data.length) return (
+    <ErrorMessage message={isRangeMode ? '選択した期間の交通データがありません' : '選択した日付の交通データがありません'} />
+  );
 
   // ====== 描画 ======
   return (
@@ -167,7 +157,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
-      {/* 棒グラフ */}
+      {/* 時間帯別棒グラフ */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">時間帯別交通状況</h3>
         {isRangeMode && totalPages > 1 && (
@@ -191,19 +181,21 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         )}
       </div>
 
-      {/* 日別 or 単日グラフ */}
+      {/* 単日 or 期間グラフ */}
       {!isRangeMode ? (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={singleDayStatusData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
-              <Tooltip />
+              <Tooltip formatter={(value, _, props) => {
+                const speed = props.payload.avgSpeed;
+                const status = props.payload.status;
+                return [`${speed} km/h (${status})`, '平均速度'];
+              }} labelFormatter={label => `時間帯: ${label}`} />
               <Bar dataKey="height" radius={[4, 4, 0, 0]}>
-                {singleDayStatusData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-                <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
+                {singleDayStatusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                <LabelList dataKey="avgSpeed" position="center" fill="#fff" style={{ fontSize: 12, fontWeight: 'bold' }} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -211,11 +203,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       ) : (
         <div className="space-y-6">
           {currentDays.map((dayData, i) => {
-            const dayStatusData = dayData.hourlyData.map(item => ({
-              ...item,
-              ...getTrafficStatus(item.avgSpeed),
-              height: 100
-            }));
+            const dayStatusData = dayData.hourlyData.map(item => ({ ...item, ...getTrafficStatus(item.avgSpeed), height: 100 }));
             return (
               <div key={i} className="border rounded-lg p-4">
                 <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
@@ -224,12 +212,14 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                     <BarChart data={dayStatusData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="hour" angle={-45} height={50} />
-                      <Tooltip />
+                      <Tooltip formatter={(value, _, props) => {
+                        const speed = props.payload.avgSpeed;
+                        const status = props.payload.status;
+                        return [`${speed} km/h (${status})`, '平均速度'];
+                      }} labelFormatter={label => label} />
                       <Bar dataKey="height" radius={[3, 3, 0, 0]}>
-                        {dayStatusData.map((entry, j) => (
-                          <Cell key={j} fill={entry.color} />
-                        ))}
-                        <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
+                        {dayStatusData.map((entry, j) => <Cell key={j} fill={entry.color} />)}
+                        <LabelList dataKey="avgSpeed" position="center" fill="#fff" style={{ fontSize: 10, fontWeight: 'bold' }} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -247,16 +237,14 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={pieData}
+                data={vehicleTypeData}
                 cx="50%"
                 cy="50%"
                 outerRadius="80%"
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
               >
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
+                {vehicleTypeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Pie>
               <Tooltip />
             </PieChart>
