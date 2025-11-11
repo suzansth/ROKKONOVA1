@@ -4,7 +4,6 @@ import {
   PieChart, Pie, Cell, Legend, BarChart, Bar, LabelList
 } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useSwipeable } from 'react-swipeable';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import TrafficDataTable from './TrafficDataTable';
@@ -29,13 +28,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   const loading = false;
   const error = undefined;
 
-  // ====== ヘルパー関数 ======
-  const getTrafficStatus = (speed: number) => {
-    if (speed >= 30) return { status: '普通', color: '#10B981' };
-    if (speed >= 20) return { status: '混雑', color: '#F59E0B' };
-    return { status: '渋滞', color: '#EF4444' };
-  };
-
+  // ====== データ集計関数 ======
   const aggregateHourlyData = (data: TrafficData[]) => {
     const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
     data.forEach(item => {
@@ -55,19 +48,14 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  const formatDateWithWeekday = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-    return `${dateStr} (${weekdays[date.getDay()]})`;
-  };
-
-  // ====== ローディング・エラー表示 ======
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={`交通データの取得に失敗しました: ${error}`} />;
-  if (!data.length)
-    return <ErrorMessage message={isRangeMode ? '選択した期間の交通データがありません' : '選択した日付の交通データがありません'} />;
+  if (!data || data.length === 0)
+    return (
+      <ErrorMessage message={isRangeMode ? '選択した期間の交通データがありません' : '選択した日付の交通データがありません'} />
+    );
 
-  // ====== 単日用データ ======
+  // ====== 時間帯別データ ======
   const hourlyData = React.useMemo(() => {
     const grouped: Record<string, { totalSpeed: number; count: number }> = {};
     data.forEach(item => {
@@ -78,15 +66,16 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       grouped[key].count += 1;
     });
     return Object.entries(grouped)
-      .map(([hour, val]) => ({ hour, avgSpeed: Math.round((val.totalSpeed / val.count) * 10) / 10 }))
+      .map(([hour, val]) => ({
+        hour,
+        avgSpeed: Math.round((val.totalSpeed / val.count) * 10) / 10
+      }))
       .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
   }, [data]);
 
-  const singleDayStatusData = hourlyData.map(item => ({ ...item, ...getTrafficStatus(item.avgSpeed), height: 100 }));
-
-  // ====== 期間選択用データ ======
+  // ====== 期間選択時・日別データ ======
   const dailyTrafficData = React.useMemo(() => {
-    if (!isRangeMode) return [];
+    if (!isRangeMode || !data.length) return [];
     const groupedByDate: Record<string, TrafficData[]> = {};
     data.forEach(item => {
       const date = item.timestamp.split(' ')[0];
@@ -97,46 +86,61 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       const hourlyGrouped: Record<string, { totalSpeed: number; count: number }> = {};
       dayData.forEach(item => {
         const hour = item.timestamp.split(' ')[1].split(':')[0];
-        if (!hourlyGrouped[hour]) hourlyGrouped[hour] = { totalSpeed: 0, count: 0 };
-        hourlyGrouped[hour].totalSpeed += item.speed_kmh;
-        hourlyGrouped[hour].count += 1;
+        const key = `${hour}時`;
+        if (!hourlyGrouped[key]) hourlyGrouped[key] = { totalSpeed: 0, count: 0 };
+        hourlyGrouped[key].totalSpeed += item.speed_kmh;
+        hourlyGrouped[key].count += 1;
       });
       const hourlyData = Object.entries(hourlyGrouped)
-        .map(([hour, val]) => ({ hour: `${hour}時`, avgSpeed: Math.round((val.totalSpeed / val.count) * 10) / 10 }))
+        .map(([hour, val]) => ({
+          hour,
+          avgSpeed: Math.round((val.totalSpeed / val.count) * 10) / 10
+        }))
         .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
       return { date, hourlyData };
     }).sort((a, b) => a.date.localeCompare(b.date));
   }, [data, isRangeMode]);
 
+  // ====== ページネーション ======
   const daysPerPage = 3;
   const totalPages = Math.ceil(dailyTrafficData.length / daysPerPage);
   const currentDays = dailyTrafficData.slice(currentPage * daysPerPage, (currentPage + 1) * daysPerPage);
 
-  React.useEffect(() => setCurrentPage(0), [startDate, endDate, isRangeMode]);
+  React.useEffect(() => {
+    setCurrentPage(0);
+  }, [startDate, endDate, isRangeMode]);
 
-  // ====== スワイプハンドラ ======
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1),
-    onSwipedRight: () => currentPage > 0 && setCurrentPage(currentPage - 1),
-    trackMouse: true,
-  });
+  // ====== 交通状況分類 ======
+  const getTrafficStatus = (speed: number) => {
+    if (speed >= 30) return { status: '普通', color: '#10B981' };
+    if (speed >= 20) return { status: '混雑', color: '#F59E0B' };
+    return { status: '渋滞', color: '#EF4444' };
+  };
 
-  // ====== 折れ線グラフ用 ======
+  const singleDayStatusData = hourlyData.map(item => ({
+    ...item,
+    ...getTrafficStatus(item.avgSpeed),
+    height: 100
+  }));
+
   const timeSeriesData = aggregateHourlyData(data);
 
-  // ====== 円グラフ用 ======
   const vehicleTypeData = data.reduce((acc, item) => {
     acc[item.class_name] = (acc[item.class_name] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  const pieData = Object.entries(vehicleTypeData).map(([name, value]) => ({ name, value }));
+
+  const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
+    name: type,
+    value: count
+  }));
 
   // ====== 描画 ======
   return (
     <div className="space-y-8">
       {/* 折れ線グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold mb-6">交通量・平均速度の推移</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">交通量・平均速度の推移</h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={timeSeriesData}>
@@ -153,85 +157,95 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
-      {/* 時間帯別バーグラフ */}
-      {isRangeMode ? (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 0}
-              className="flex items-center px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md disabled:opacity-50"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" /> 前へ
-            </button>
-            <span className="text-sm">{currentPage + 1} / {totalPages}</span>
-            <button
-              onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages - 1}
-              className="flex items-center px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md disabled:opacity-50"
-            >
-              次へ <ChevronRight className="h-4 w-4 ml-1" />
-            </button>
-          </div>
-
-          <div {...swipeHandlers} className="overflow-hidden">
-            <div className="flex transition-transform duration-300" style={{ transform: `translateX(-${currentPage * 100}%)` }}>
-              {Array.from({ length: totalPages }).map((_, pageIndex) => {
-                const pageDays = dailyTrafficData.slice(pageIndex * daysPerPage, (pageIndex + 1) * daysPerPage);
-                return (
-                  <div key={pageIndex} className="flex flex-nowrap w-full justify-between px-2">
-                    {pageDays.map((day, i) => {
-                      const dayStatusData = day.hourlyData.map(item => ({ ...item, ...getTrafficStatus(item.avgSpeed), height: 100 }));
-                      return (
-                        <div key={i} className="flex-shrink-0 w-[32%] border rounded-lg p-2 bg-white shadow-sm">
-                          <h4 className="text-xs font-medium mb-1">{formatDateWithWeekday(day.date)}</h4>
-                          <div className="h-36">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={dayStatusData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="hour" angle={-45} height={20} tick={{ fontSize: 8 }} />
-                                <Tooltip labelFormatter={hour => `${day.date} ${hour}`} />
-                                <Bar dataKey="height" radius={[3,3,0,0]}>
-                                  {dayStatusData.map((entry, j) => <Cell key={j} fill={entry.color} />)}
-                                  <LabelList dataKey="avgSpeed" position="center" fill="#fff" style={{ fontSize: 8 }} />
-                                </Bar>
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      ) : (
+      {/* 日別グラフ */}
+      {!isRangeMode ? (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={singleDayStatusData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hour" angle={-45} textAnchor="end" height={60} tick={{ fontSize: 12 }} />
+              <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
               <Tooltip />
               <Bar dataKey="height" radius={[4, 4, 0, 0]}>
-                {singleDayStatusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                {singleDayStatusData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
                 <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
+      ) : (
+        <div className="space-y-6">
+          {currentDays.map((dayData, i) => {
+            const dayStatusData = dayData.hourlyData.map(item => ({
+              ...item,
+              ...getTrafficStatus(item.avgSpeed),
+              height: 100
+            }));
+            return (
+              <div key={i} className="border rounded-lg p-4">
+                <h4 className="text-md font-medium mb-3">
+                  {dayData.date} ({new Date(dayData.date).toLocaleDateString('ja-JP', { weekday: 'short' })})
+                </h4>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dayStatusData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hour" angle={-45} height={50} />
+                      <Tooltip labelFormatter={(label) => `${dayData.date} ${label}`} />
+                      <Bar dataKey="height" radius={[3, 3, 0, 0]}>
+                        {dayStatusData.map((entry, j) => (
+                          <Cell key={j} fill={entry.color} />
+                        ))}
+                        <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* ページネーション */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-4 mt-4">
+              <button
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0}
+                className="flex items-center px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-md"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" /> 前へ
+              </button>
+              <span className="text-sm text-gray-600">{currentPage + 1} / {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                disabled={currentPage === totalPages - 1}
+                className="flex items-center px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded-md"
+              >
+                次へ <ChevronRight className="h-4 w-4 ml-1" />
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold mb-6">車種別構成比</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius="80%" dataKey="value"
-                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}>
-                {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                outerRadius="80%"
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+              >
+                {pieData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
               </Pie>
               <Tooltip />
             </PieChart>
@@ -239,7 +253,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
       </div>
 
-      {/* テーブル */}
       <TrafficDataTable data={data} className="mt-8" />
     </div>
   );
