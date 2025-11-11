@@ -19,7 +19,7 @@ function App() {
 
   const handleToggleMode = () => {
     setIsRangeMode(!isRangeMode);
-    // Reset dates when switching modes
+    // 範囲モード切替時に日付をリセット
     if (!isRangeMode) {
       setStartDate(selectedDate);
       setEndDate(selectedDate);
@@ -40,6 +40,7 @@ function App() {
           </p>
         </div>
 
+        {/* 日付フィルター */}
         <DateFilter 
           selectedDate={selectedDate} 
           onDateChange={setSelectedDate}
@@ -51,7 +52,7 @@ function App() {
           onToggleMode={handleToggleMode}
         />
         
-        {/* CSV Upload Section */}
+        {/* CSV アップロードセクション */}
         <div className="mb-6">
           <button
             onClick={() => setShowUploader(!showUploader)}
@@ -73,9 +74,11 @@ function App() {
             </div>
           )}
         </div>
-        
-        {activeTab === 'traffic' && (
-          <>
+
+        {/* ====== タブ切り替えエラー修正版 ====== */}
+        <div className="space-y-8">
+          {/* 交通データタブ */}
+          <div className={activeTab === 'traffic' ? 'block' : 'hidden'}>
             <DataSourceToggle
               isUsingCsv={isUsingCsvData.traffic}
               onToggle={() => {}}
@@ -91,11 +94,10 @@ function App() {
               endDate={endDate}
               isRangeMode={isRangeMode}
             />
-          </>
-        )}
-        
-        {activeTab === 'parking' && (
-          <>
+          </div>
+
+          {/* 駐車データタブ */}
+          <div className={activeTab === 'parking' ? 'block' : 'hidden'}>
             <DataSourceToggle
               isUsingCsv={isUsingCsvData.parking}
               onToggle={() => {}}
@@ -111,8 +113,8 @@ function App() {
               endDate={endDate}
               isRangeMode={isRangeMode}
             />
-          </>
-        )}
+          </div>
+        </div>
       </main>
     </div>
   );
