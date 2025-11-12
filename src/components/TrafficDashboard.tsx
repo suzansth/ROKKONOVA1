@@ -240,6 +240,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
             );
           })}
         </div>
+        </div>
       )}
 
       {/* 円グラフ */}
