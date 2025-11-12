@@ -161,8 +161,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
       {/* ページネーションボタン */}
       {isRangeMode && totalPages > 1 && (
-      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
         <div className="flex items-center justify-end space-x-4">
           <button
             onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
@@ -180,11 +178,13 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
             次へ <ChevronRight className="h-4 w-4 ml-1" />
           </button>
         </div>
-        </div>
+        
       )}
 
       {/* 日別 or 単日グラフ */}
       {!isRangeMode ? (
+       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={singleDayStatusData}>
@@ -200,6 +200,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
             </BarChart>
           </ResponsiveContainer>
         </div>
+         </div>
       ) : (
         <div className="space-y-6">
           {currentDays.map((dayData, i) => {
