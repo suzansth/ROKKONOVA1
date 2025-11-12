@@ -180,6 +180,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
             次へ <ChevronRight className="h-4 w-4 ml-1" />
           </button>
         </div>
+        </div>
       )}
 
       {/* 日別 or 単日グラフ */}
