@@ -202,7 +202,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         </div>
          </div>
       ) : (
-        <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+    {/* ✅ タイトルを1つだけ表示 */}
+    <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
+
+    {/* 7つのグラフをまとめて表示 */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {currentDays.map((dayData, i) => {
             const dayStatusData = dayData.hourlyData.map(item => ({
               ...item,
@@ -210,8 +215,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
               height: 100
             }));
             return (
-              <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
+      
               <div key={i} className="border rounded-lg p-4">
                 <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
                 <div className="h-48">
