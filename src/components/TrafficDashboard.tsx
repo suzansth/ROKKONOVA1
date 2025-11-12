@@ -77,7 +77,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   }, [data]);
 
   // ====== ページネーション ======
-  const daysPerPage = 3;
+  const daysPerPage = 7;
   const totalPages = Math.ceil(dailyTrafficData.length / daysPerPage);
   const currentDays = dailyTrafficData.slice(currentPage * daysPerPage, (currentPage + 1) * daysPerPage);
 
@@ -178,56 +178,70 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
             次へ <ChevronRight className="h-4 w-4 ml-1" />
           </button>
         </div>
+        
       )}
 
       {/* 日別 or 単日グラフ */}
       {!isRangeMode ? (
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={singleDayStatusData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
-              <Tooltip />
-              <Bar dataKey="height" radius={[4, 4, 0, 0]}>
-                {singleDayStatusData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-                <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {currentDays.map((dayData, i) => {
-            const dayStatusData = dayData.hourlyData.map(item => ({
-              ...item,
-              ...getTrafficStatus(item.avgSpeed),
-              height: 100
-            }));
-            return (
-              <div key={i} className="border rounded-lg p-4">
-                <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dayStatusData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="hour" angle={-45} height={50} />
-                      <Tooltip />
-                      <Bar dataKey="height" radius={[3, 3, 0, 0]}>
-                        {dayStatusData.map((entry, j) => (
-                          <Cell key={j} fill={entry.color} />
-                        ))}
-                        <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+  // --- 単日表示 ---
+  <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+    <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
+    <div className="h-32">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={singleDayStatusData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
+          <Tooltip />
+          <Bar dataKey="height" radius={[4, 4, 0, 0]}>
+            {singleDayStatusData.map((entry, i) => (
+              <Cell key={i} fill={entry.color} />
+            ))}
+            <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+) : (
+  // --- 期間モード（複数日）---
+  <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+    {/* ✅ タイトルはここに1回だけ表示 */}
+    <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
+
+    {/* ✅ グラフを縦1列で並べる */}
+    <div className="flex flex-col space-y-6">
+      {currentDays.map((dayData, i) => {
+        const dayStatusData = dayData.hourlyData.map(item => ({
+          ...item,
+          ...getTrafficStatus(item.avgSpeed),
+          height: 100,
+        }));
+
+        return (
+          <div key={i} className="border rounded-lg p-4">
+            {/* 各日付タイトルのみ個別に表示 */}
+            <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
+            <div className="h-24">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dayStatusData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" angle={-45} height={50} />
+                  <Tooltip />
+                  <Bar dataKey="height" radius={[3, 3, 0, 0]}>
+                    {dayStatusData.map((entry, j) => (
+                      <Cell key={j} fill={entry.color} />
+                    ))}
+                    <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
 
       {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
