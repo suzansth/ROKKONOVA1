@@ -77,7 +77,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   }, [data]);
 
   // ====== ページネーション ======
-  const daysPerPage = 3;
+  const daysPerPage = 7;
   const totalPages = Math.ceil(dailyTrafficData.length / daysPerPage);
   const currentDays = dailyTrafficData.slice(currentPage * daysPerPage, (currentPage + 1) * daysPerPage);
 
