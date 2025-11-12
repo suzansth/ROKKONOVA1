@@ -161,6 +161,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
       {/* ページネーションボタン */}
       {isRangeMode && totalPages > 1 && (
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
         <div className="flex items-center justify-end space-x-4">
           <button
             onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
