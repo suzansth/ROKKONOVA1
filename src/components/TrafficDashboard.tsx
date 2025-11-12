@@ -221,7 +221,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
           <div key={i} className="border rounded-lg p-4">
             {/* 各日付タイトルのみ個別に表示 */}
             <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
-            <div className="h-48">
+            <div className="h-24">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dayStatusData}>
                   <CartesianGrid strokeDasharray="3 3" />
