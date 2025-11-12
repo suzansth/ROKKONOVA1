@@ -186,7 +186,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   // --- 単日表示 ---
   <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
     <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
-    <div className="h-64">
+    <div className="h-32">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={singleDayStatusData}>
           <CartesianGrid strokeDasharray="3 3" />
