@@ -234,8 +234,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                   </ResponsiveContainer>
                 </div>
               </div>
-              </div>
-              </div>
+              
+            
             
             );
           })}
