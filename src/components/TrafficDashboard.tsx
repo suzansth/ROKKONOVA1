@@ -210,6 +210,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
               height: 100
             }));
             return (
+              <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
               <div key={i} className="border rounded-lg p-4">
                 <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
                 <div className="h-48">
@@ -228,6 +230,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                   </ResponsiveContainer>
                 </div>
               </div>
+              </div>
+            
             );
           })}
         </div>
