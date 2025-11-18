@@ -87,16 +87,7 @@ const ParkingDataTable: React.FC<ParkingDataTableProps> = ({ data, className }) 
         </div>
       )
     },
-    {
-      key: 'four-digit number',
-      label: 'ナンバー',
-      sortable: true,
-      render: (value: string) => (
-        <div className="text-center">
-          <span className="font-mono font-medium">{value}</span>
-        </div>
-      )
-    }
+   
   ];
 
   return (

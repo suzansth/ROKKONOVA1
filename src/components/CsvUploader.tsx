@@ -14,7 +14,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onDataUploaded, dataType }) =
 
   const expectedColumns = {
     traffic: ['timestamp', 'object_id', 'class_name', 'direction', 'speed_kmh'],
-    parking: ['timestamp', 'object_id', 'vehicle_type', 'direction', 'city', 'engine_size', 'kana', 'four-digit number']
+    parking: ['timestamp', 'object_id', 'vehicle_type', 'direction', 'city', 'engine_size', 'kana',]
   };
 
   const handleDragOver = (e: React.DragEvent) => {
