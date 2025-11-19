@@ -190,7 +190,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={singleDayStatusData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
+          <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={0} textAnchor="end" height={60} />
           <Tooltip />
           <Bar dataKey="height" radius={[4, 4, 0, 0]}>
             {singleDayStatusData.map((entry, i) => (
