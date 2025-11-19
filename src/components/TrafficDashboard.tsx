@@ -236,19 +236,17 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 <BarChart data={dayStatusData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" angle={0} height={50} />
-                  <Tooltip 
-                    formatter={(value, name) => {
-                      if (name === 'height') {
-                        return [`${dayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
-                      }
-                      return [value, name];
-                    }}
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px'
-                    }}
-                  />
+                  <Tooltip
+  formatter={(value, name, props) => {
+    const avg = props.payload.avgSpeed;
+    return [`${avg} km/h`, '平均速度'];
+  }}
+  contentStyle={{
+    backgroundColor: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px'
+  }}
+/>
                   <Bar dataKey="height" radius={[3, 3, 0, 0]}>
                     {dayStatusData.map((entry, j) => (
                       <Cell key={j} fill={entry.color} />
