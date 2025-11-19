@@ -191,7 +191,17 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         <BarChart data={singleDayStatusData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={0} textAnchor="end" height={60} />
-          <Tooltip />
+          <Tooltip
+  formatter={(value, name, props) => {
+    const avg = props.payload.avgSpeed;
+    return [`${avg} km/h`, '平均速度'];
+  }}
+  contentStyle={{
+    backgroundColor: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px'
+  }}
+/>
           <Bar dataKey="height" radius={[4, 4, 0, 0]}>
             {singleDayStatusData.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
@@ -226,7 +236,17 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 <BarChart data={dayStatusData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" angle={0} height={50} />
-                  <Tooltip />
+                  <Tooltip
+  formatter={(value, name, props) => {
+    const avg = props.payload.avgSpeed;
+    return [`${avg} km/h`, '平均速度'];
+  }}
+  contentStyle={{
+    backgroundColor: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px'
+  }}
+/>
                   <Bar dataKey="height" radius={[3, 3, 0, 0]}>
                     {dayStatusData.map((entry, j) => (
                       <Cell key={j} fill={entry.color} />
