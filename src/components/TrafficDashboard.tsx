@@ -191,7 +191,19 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         <BarChart data={singleDayStatusData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={0} textAnchor="end" height={60} />
-          <Tooltip />
+          <Tooltip 
+            formatter={(value, name) => {
+              if (name === 'height') {
+                return [`${singleDayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
+              }
+              return [value, name];
+            }}
+            contentStyle={{ 
+              backgroundColor: 'white', 
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px'
+            }}
+          />
           <Bar dataKey="height" radius={[4, 4, 0, 0]}>
             {singleDayStatusData.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
@@ -226,7 +238,19 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 <BarChart data={dayStatusData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" angle={0} height={50} />
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value, name) => {
+                      if (name === 'height') {
+                        return [`${dayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
+                      }
+                      return [value, name];
+                    }}
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
+                    }}
+                  />
                   <Bar dataKey="height" radius={[3, 3, 0, 0]}>
                     {dayStatusData.map((entry, j) => (
                       <Cell key={j} fill={entry.color} />
