@@ -213,7 +213,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       {currentDays.map((dayData, i) => {
         const dayStatusData = dayData.hourlyData.map(item => ({
           ...item,
-          ...getTrafficStatus:(item.avgSpeed),
+          ...getTrafficStatus(item.avgSpeed),
           height: 100,
         }));
 
