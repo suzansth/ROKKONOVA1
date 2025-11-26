@@ -243,15 +243,14 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-        {/* Vehicle Type Distribution */}
+      {/* Usage Type Distribution */}
         <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <Pie
-                data={pieData}
+                data={usagePieData}
                 cx="50%"
                 cy="50%"
                 labelLine={true}
@@ -263,7 +262,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                 stroke="#fff"
                 strokeWidth={2}
               >
-                {pieData.map((entry, index) => (
+                {usagePieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -279,12 +278,13 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
 
       {/* === グリッドエリア === */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
         {/* 今後グラフを追加する場合はここに */}
       </div>
-      </div> 
+      
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
     </div>
