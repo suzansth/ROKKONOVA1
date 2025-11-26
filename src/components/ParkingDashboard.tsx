@@ -124,28 +124,34 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     timeSeriesData = aggregateHourlyData(data);
   }
 
-  // === 用途分類ロジック ===
-  const usageDataMap = {
-    private: 0, // 自家用車
-    commercial: 0, // 商用車
-    rental: 0, // レンタカー
-  };
+// === 用途分類ロジック ===
+const usageDataMap = {
+  private: 0,    // 自家用車
+  commercial: 0, // 商用車
+  rental: 0      // レンタカー
+};
 
-  data.forEach((item) => {
-    const stay = item.stay_time;
-    let type = 'private';
+data.forEach((item) => {
+  const stay = item.stay_time;
+  const numberPlate = item.number_plate || ""; // ← undefined 対策
 
-    if (stay > 180) type = 'commercial';
-    else if (item.number_plate.includes('大阪') && stay < 120) type = 'rental';
+  let type = 'private';
 
-    usageDataMap[type]++;
-  });
+  if (stay > 180) {
+    type = 'commercial';
+  } else if (numberPlate.includes('大阪') && stay < 120) {
+    type = 'rental';
+  }
 
-  const usagePieData = [
-    { name: '自家用車', value: usageDataMap.private },
-    { name: '商用車', value: usageDataMap.commercial },
-    { name: 'レンタカー', value: usageDataMap.rental },
-  ];
+  usageDataMap[type]++;
+});
+
+const usagePieData = [
+  { name: '自家用車', value: usageDataMap.private },
+  { name: '商用車', value: usageDataMap.commercial },
+  { name: 'レンタカー', value: usageDataMap.rental },
+];
+
 
   return (
     <div className="space-y-8">
