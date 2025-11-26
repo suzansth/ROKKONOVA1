@@ -132,7 +132,7 @@ const privateKana = [
   'ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ'
 ];
 const rentalKana = ['わ','れ'];  // レンタカー
-const militaryKana = ['よ'];      // 駐留軍人車両
+const militaryKana = ['よ'];      // その他
 const militaryAlpha = ['E','H','K','M','T','Y']; // 英字
 
 // === 用途分類カウンター ===
