@@ -278,7 +278,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      
 
       {/* === グリッドエリア === */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
