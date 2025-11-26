@@ -284,7 +284,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
         {/* 今後グラフを追加する場合はここに */}
       </div>
-      
+        </div
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
     </div>
