@@ -288,7 +288,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
-    </div>
+   
   );
 };
 
