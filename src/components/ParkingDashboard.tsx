@@ -182,7 +182,7 @@ const usagePieData = [
   { name: '自家用車', value: usageDataMap.private },
   { name: '商用車', value: usageDataMap.commercial },
   { name: 'レンタカー', value: usageDataMap.rental },
-  { name: '駐留軍人車両', value: usageDataMap.military },
+  { name: 'その他', value: usageDataMap.military },
 ];
 
 
