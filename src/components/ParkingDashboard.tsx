@@ -148,7 +148,7 @@ data.forEach((item) => {
 
 const usagePieData = [
   { name: '自家用車', value: usageDataMap.private },
-  { name: '商用車', value: usageDataMap.commercial },
+  { name: 'その他', value: usageDataMap.commercial },
   { name: 'レンタカー', value: usageDataMap.rental },
 ];
 
