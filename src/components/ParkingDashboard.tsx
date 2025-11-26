@@ -127,7 +127,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 // === 用途分類ロジック ===
 const usageDataMap = {
   private: 0,    // 自家用車
-  commercial: 0, // 商用車
+  commercial: 0, // その他
   rental: 0      // レンタカー
 };
 
