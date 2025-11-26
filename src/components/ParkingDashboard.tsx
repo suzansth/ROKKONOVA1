@@ -124,33 +124,67 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     timeSeriesData = aggregateHourlyData(data);
   }
 
-// === 用途分類ロジック ===
+// === かな分類テーブル ===
+const commercialKana = ['あ','い','う','え','お','か','き','く','け','こ'];
+const privateKana = [
+  'さ','し','す','せ','そ','た','ち','つ','て','と',
+  'な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ',
+  'ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ'
+];
+const rentalKana = ['わ','れ'];  // レンタカー
+const militaryKana = ['よ'];      // 駐留軍人車両
+const militaryAlpha = ['E','H','K','M','T','Y']; // 英字
+
+// === 用途分類カウンター ===
 const usageDataMap = {
-  private: 0,    // 自家用車
-  commercial: 0, // その他
-  rental: 0      // レンタカー
+  private: 0,
+  commercial: 0,
+  rental: 0,
+  military: 0
 };
 
+// === 用途分類ロジック ===
 data.forEach((item) => {
-  const stay = item.stay_time;
-  const numberPlate = item.number_plate || ""; // ← undefined 対策
+  const kana = item.kana;
 
   let type = 'private';
 
-  if (stay > 180) {
-    type = 'commercial';
-  } else if (numberPlate.includes('大阪') && stay < 120) {
+  if (!kana) {
+    return; // データに kana が無い場合はスキップ
+  }
+
+  // 軍用車（アルファベットの場合）
+  if (militaryAlpha.includes(kana.toUpperCase())) {
+    type = 'military';
+  }
+  // 軍用車（ひらがな "よ"）
+  else if (militaryKana.includes(kana)) {
+    type = 'military';
+  }
+  // レンタカー
+  else if (rentalKana.includes(kana)) {
     type = 'rental';
+  }
+  // 商用車
+  else if (commercialKana.includes(kana)) {
+    type = 'commercial';
+  }
+  // 自家用車
+  else if (privateKana.includes(kana)) {
+    type = 'private';
   }
 
   usageDataMap[type]++;
 });
 
+// === 円グラフデータ ===
 const usagePieData = [
   { name: '自家用車', value: usageDataMap.private },
-  { name: 'その他', value: usageDataMap.commercial },
+  { name: '商用車', value: usageDataMap.commercial },
   { name: 'レンタカー', value: usageDataMap.rental },
+  { name: '駐留軍人車両', value: usageDataMap.military },
 ];
+
 
 
   return (
