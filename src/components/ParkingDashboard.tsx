@@ -230,7 +230,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         </div>
       </div>
 
-      {/* === 地域別構成比 === */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
 
         <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
@@ -268,14 +268,37 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           </div>
         </div>
 
+      {/* Average Stay Duration */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">時間帯別平均滞在時間</h3>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={stayDurationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="hour" 
+              tick={{ fontSize: 12 }}
+            />
+            <YAxis 
+              tick={{ fontSize: 12 }}
+              label={{ value: '滞在時間 (分)', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip 
+              formatter={(value) => [`${value}分`, '平均滞在時間']}
+              contentStyle={{ 
+                backgroundColor: 'white', 
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px'
+              }}
+            />
+            <Bar 
+              dataKey="avgDuration" 
+              fill="#3B82F6" 
+              radius={[4, 4, 0, 0]}
+              stroke="#2563EB"
+              strokeWidth={1}
+            />
+          </BarChart>
+          </ResponsiveContainer>
         </div>
-
-      {/* === テーブル === */}
-      <ParkingDataTable data={data} className="mt-8" />
-
-      {/* space-y-8 の閉じ */}
-    </div>
-  );
-};
-
-export default ParkingDashboard;
+      </div>
