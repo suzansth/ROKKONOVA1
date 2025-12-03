@@ -8,11 +8,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar
 } from 'recharts';
 import { useParkingData } from '../hooks/useApi';
 import { ParkingData } from '../types';
@@ -64,51 +59,57 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     );
   }
 
-  // === 1時間ごとの集計 ===
+  // === 1時間ごとにデータを集計 ===
   const aggregateHourlyData = (data: ParkingData[]) => {
     const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
+
     data.forEach((item) => {
       const hour = item.timestamp.split(' ')[1].split(':')[0] + ':00';
-      if (!grouped[hour]) grouped[hour] = { entry: 0, exit: 0, total: 0 };
+      if (!grouped[hour]) {
+        grouped[hour] = { entry: 0, exit: 0, total: 0 };
+      }
 
-      if (item.direction === 'in') grouped[hour].entry++;
-      if (item.direction === 'out') grouped[hour].exit++;
-      grouped[hour].total++;
+      if (item.direction === 'in') grouped[hour].entry += 1;
+      if (item.direction === 'out') grouped[hour].exit += 1;
+      grouped[hour].total += 1;
     });
 
     return Object.entries(grouped)
-      .map(([hour, val]) => ({
+      .map(([hour, values]) => ({
         time: hour,
-        entry: val.entry,
-        exit: val.exit,
+        entry: values.entry,
+        exit: values.exit,
         occupancy:
-          val.total > 0
-            ? Math.round(((val.entry - val.exit) / val.total) * 100)
+          values.total > 0
+            ? Math.round(((values.entry - values.exit) / values.total) * 100)
             : 0,
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // === 日ごとの集計 ===
+  // === 日ごとにデータを集計 ===
   const aggregateDailyData = (data: ParkingData[]) => {
     const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
+
     data.forEach((item) => {
       const date = item.timestamp.split(' ')[0];
-      if (!grouped[date]) grouped[date] = { entry: 0, exit: 0, total: 0 };
+      if (!grouped[date]) {
+        grouped[date] = { entry: 0, exit: 0, total: 0 };
+      }
 
-      if (item.direction === 'in') grouped[date].entry++;
-      if (item.direction === 'out') grouped[date].exit++;
-      grouped[date].total++;
+      if (item.direction === 'in') grouped[date].entry += 1;
+      if (item.direction === 'out') grouped[date].exit += 1;
+      grouped[date].total += 1;
     });
 
     return Object.entries(grouped)
-      .map(([date, val]) => ({
+      .map(([date, values]) => ({
         time: date,
-        entry: val.entry,
-        exit: val.exit,
+        entry: values.entry,
+        exit: values.exit,
         occupancy:
-          val.total > 0
-            ? Math.round(((val.entry - val.exit) / val.total) * 100)
+          values.total > 0
+            ? Math.round(((values.entry - values.exit) / values.total) * 100)
             : 0,
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
@@ -117,224 +118,138 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   // === 時系列データ ===
   let timeSeriesData;
   if (isRangeMode && startDate && endDate) {
-    const diff =
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-      (1000 * 60 * 60 * 24);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-    timeSeriesData = diff >= 3 ? aggregateDailyData(data) : aggregateHourlyData(data);
+    timeSeriesData =
+      diffDays >= 3 ? aggregateDailyData(data) : aggregateHourlyData(data);
   } else {
     timeSeriesData = aggregateHourlyData(data);
   }
 
-  // === かな分類 ===
-  const commercialKana = ['あ','い','う','え','お','か','き','く','け','こ'];
-  const privateKana = [
-    'さ','し','す','せ','そ','た','ち','つ','て','と',
-    'な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ',
-    'ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ'
-  ];
-  const rentalKana = ['わ','れ'];
-  const militaryKana = ['よ'];
-  const militaryAlpha = ['E','H','K','M','T','Y'];
+  // === 地域別データ ===
+  const cityData = data.reduce((acc, item) => {
+    acc[item.city] = (acc[item.city] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const usageDataMap = {
-    private: 0,
-    commercial: 0,
-    rental: 0,
-    military: 0
-  };
-
-  data.forEach((item) => {
-    const kana = item.kana;
-    let type = 'private';
-
-    if (!kana) return;
-
-    if (militaryAlpha.includes(kana.toUpperCase())) type = 'military';
-    else if (militaryKana.includes(kana)) type = 'military';
-    else if (rentalKana.includes(kana)) type = 'rental';
-    else if (commercialKana.includes(kana)) type = 'commercial';
-    else if (privateKana.includes(kana)) type = 'private';
-
-    usageDataMap[type]++;
-  });
-
-  const usagePieData = [
-    { name: '自家用車', value: usageDataMap.private },
-    { name: '商用車', value: usageDataMap.commercial },
-    { name: 'レンタカー', value: usageDataMap.rental },
-    { name: 'その他', value: usageDataMap.military },
-  ];
-
-  // === 地域集計 ===
-  const regionCount: Record<string, number> = {};
-  data.forEach((item) => {
-    const region = item.city || '不明';
-    if (!regionCount[region]) regionCount[region] = 0;
-    regionCount[region]++;
-  });
-
-  const regionPieData = Object.entries(regionCount).map(([name, value]) => ({
-    name,
-    value,
+  const cityPieData = Object.entries(cityData).map(([city, count]) => ({
+    name: city,
+    value: count,
   }));
 
-  // === 滞在時間データ ===
-  const stayDurationData = [
-    { hour: '00:00', avgDuration: 120 },
-    { hour: '01:00', avgDuration: 110 },
-    { hour: '02:00', avgDuration: 105 },
-    { hour: '03:00', avgDuration: 100 },
-    { hour: '04:00', avgDuration: 95 },
-    { hour: '05:00', avgDuration: 90 },
-    { hour: '06:00', avgDuration: 85 },
-    { hour: '07:00', avgDuration: 80 },
-    { hour: '08:00', avgDuration: 75 },
-    { hour: '09:00', avgDuration: 70 },
-    { hour: '10:00', avgDuration: 65 },
-    { hour: '11:00', avgDuration: 60 },
-    { hour: '12:00', avgDuration: 55 },
-    { hour: '13:00', avgDuration: 50 },
-    { hour: '14:00', avgDuration: 45 },
-    { hour: '15:00', avgDuration: 40 },
-    { hour: '16:00', avgDuration: 35 },
-    { hour: '17:00', avgDuration: 30 },
-    { hour: '18:00', avgDuration: 35 },
-    { hour: '19:00', avgDuration: 40 },
-    { hour: '20:00', avgDuration: 45 },
-    { hour: '21:00', avgDuration: 50 },
-    { hour: '22:00', avgDuration: 60 },
-    { hour: '23:00', avgDuration: 80 }
-  ];
+  // === 車種別データ ===
+  const vehicleTypeData = data.reduce((acc, item) => {
+    acc[item.vehicle_type] = (acc[item.vehicle_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const vehicleTypePieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
+    name: type === 'car' ? '乗用車' : type,
+    value: count,
+  }));
+
+  // === 時間帯別エンジンサイズ平均 ===
+  const hourlyEngineData = data.reduce((acc, item) => {
+    const hour = item.timestamp.split(' ')[1].split(':')[0];
+    if (!acc[hour]) acc[hour] = { hour, totalEngineSize: 0, count: 0 };
+    acc[hour].totalEngineSize += item.engine_size;
+    acc[hour].count += 1;
+    return acc;
+  }, {} as Record<string, { hour: string; totalEngineSize: number; count: number }>);
+
+  const engineSizeData = Object.values(hourlyEngineData).map((item) => ({
+    hour: `${item.hour}:00`,
+    avgEngineSize: Math.round(item.totalEngineSize / item.count),
+  }));
 
   return (
     <div className="space-y-8">
-
       {/* === 入庫・出庫・満車率グラフ === */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">
           入庫・出庫数および満車率の推移
+          {isRangeMode && startDate && endDate && (
+            <span className="text-sm font-normal text-gray-600 ml-2">
+              ({startDate} ～ {endDate})
+            </span>
+          )}
         </h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={timeSeriesData}>
+            <LineChart
+              data={timeSeriesData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
-              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
-              <Tooltip />
+              <XAxis
+                dataKey="time"
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis
+                yAxisId="left"
+                tick={{ fontSize: 12 }}
+                label={{ value: '台数', angle: -90, position: 'insideLeft' }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fontSize: 12 }}
+                label={{ value: '満車率 (%)', angle: 90, position: 'insideRight' }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                }}
+                formatter={(value, name) => {
+                  if (name === '満車率 (%)') return [`${value}%`, name];
+                  return [`${value}台`, name];
+                }}
+              />
               <Legend />
-              <Line yAxisId="left" type="monotone" dataKey="entry" stroke="#3B82F6" strokeWidth={3} name="入庫数" />
-              <Line yAxisId="left" type="monotone" dataKey="exit" stroke="#10B981" strokeWidth={3} name="出庫数" />
-              <Line yAxisId="right" type="monotone" dataKey="occupancy" stroke="#F59E0B" strokeWidth={3} name="満車率 (%)" />
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="entry"
+                stroke="#3B82F6"
+                strokeWidth={3}
+                name="入庫数"
+              />
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="exit"
+                stroke="#10B981"
+                strokeWidth={3}
+                name="出庫数"
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="occupancy"
+                stroke="#F59E0B"
+                strokeWidth={3}
+                name="満車率 (%)"
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* === 用途別構成比 === */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={usagePieData}
-                cx="50%"
-                cy="50%"
-                outerRadius="80%"
-                innerRadius="40%"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-              >
-                {usagePieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      {/* === グリッドエリア === */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+        {/* 今後グラフを追加する場合はここに */}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <Pie
-                  data={regionPieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                  outerRadius="80%"
-                  innerRadius="40%"
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {regionPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-      {/* Average Stay Duration */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">時間帯別平均滞在時間</h3>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stayDurationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="hour" 
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis 
-              tick={{ fontSize: 12 }}
-              label={{ value: '滞在時間 (分)', angle: -90, position: 'insideLeft' }}
-            />
-            <Tooltip 
-              formatter={(value) => [`${value}分`, '平均滞在時間']}
-              contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px'
-              }}
-            />
-            <Bar 
-              dataKey="avgDuration" 
-              fill="#3B82F6" 
-              radius={[4, 4, 0, 0]}
-              stroke="#2563EB"
-              strokeWidth={1}
-            />
-          </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      </div>
-      </div>
+      {/* === テーブル === */}
+      <ParkingDataTable data={data} className="mt-8" />
     </div>
   );
 };

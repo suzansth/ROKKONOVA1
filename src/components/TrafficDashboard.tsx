@@ -4,7 +4,6 @@ import {
   PieChart, Pie, Cell, Legend, BarChart, Bar, LabelList
 } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useTrafficData } from '../hooks/useApi';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import TrafficDataTable from './TrafficDataTable';
@@ -27,21 +26,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   // ====== ステート ======
   const [currentPage, setCurrentPage] = React.useState(0);
 
-  // ====== データ取得 ======
-  const { data, loading, error } = useTrafficData(
-    selectedDate,
-    csvData,
-    isUsingCsv,
-    startDate,
-    endDate,
-    isRangeMode
-  );
-
+  const data = csvData || [];
+  const loading = false;
+  const error = undefined;
 
   // ====== 時間帯別データ（単日用） ======
   const hourlyData = React.useMemo(() => {
-    if (!data || data.length === 0) return [];
-    
     const grouped: Record<string, { totalSpeed: number; count: number }> = {};
     data.forEach(item => {
       const hour = item.timestamp.split(' ')[1].split(':')[0];
@@ -60,8 +50,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
   // ====== 期間選択時の日別データ ======
   const dailyTrafficData = React.useMemo(() => {
-    if (!data || data.length === 0) return [];
-    
     const groupedByDate: Record<string, TrafficData[]> = {};
     data.forEach(item => {
       const date = item.timestamp.split(' ')[0];
@@ -88,43 +76,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     }).sort((a, b) => a.date.localeCompare(b.date));
   }, [data]);
 
-  // ====== 折れ線グラフ用データ ======
-  const timeSeriesData = React.useMemo(() => {
-    if (!data || data.length === 0) return [];
-    
-    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
-    data.forEach(item => {
-      const hour = item.timestamp.split(' ')[1].split(':')[0];
-      const timeKey = `${hour}:00`;
-      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
-      grouped[timeKey].vehicleCount += 1;
-      grouped[timeKey].totalSpeed += item.speed_kmh;
-      grouped[timeKey].speedCount += 1;
-    });
-    return Object.entries(grouped)
-      .map(([time, data]) => ({
-        time,
-        count: data.vehicleCount,
-        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [data]);
-
-  // ====== 円グラフ用データ ======
-  const pieData = React.useMemo(() => {
-    if (!data || data.length === 0) return [];
-    
-    const vehicleTypeData = data.reduce((acc, item) => {
-      acc[item.class_name] = (acc[item.class_name] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return Object.entries(vehicleTypeData).map(([type, count]) => ({
-      name: type,
-      value: count
-    }));
-  }, [data]);
-
   // ====== ページネーション ======
   const daysPerPage = 7;
   const totalPages = Math.ceil(dailyTrafficData.length / daysPerPage);
@@ -145,6 +96,37 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     ...item,
     ...getTrafficStatus(item.avgSpeed),
     height: 100
+  }));
+
+  // ====== 折れ線グラフ用 ======
+  const aggregateHourlyData = (data: TrafficData[]) => {
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
+    data.forEach(item => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0];
+      const timeKey = `${hour}:00`;
+      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
+      grouped[timeKey].vehicleCount += 1;
+      grouped[timeKey].totalSpeed += item.speed_kmh;
+      grouped[timeKey].speedCount += 1;
+    });
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.vehicleCount,
+        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+  const timeSeriesData = aggregateHourlyData(data);
+
+  // ====== 円グラフ用 ======
+  const vehicleTypeData = data.reduce((acc, item) => {
+    acc[item.class_name] = (acc[item.class_name] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
+    name: type,
+    value: count
   }));
 
   // ====== ローディング・エラーハンドリング ======
@@ -209,17 +191,19 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
         <BarChart data={singleDayStatusData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={0} textAnchor="end" height={60} />
-          <Tooltip
-  formatter={(value, name, props) => {
-    const avg = props.payload.avgSpeed;
-    return [`${avg} km/h`, '平均速度'];
-  }}
-  contentStyle={{
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px'
-  }}
-/>
+          <Tooltip 
+            formatter={(value, name) => {
+              if (name === 'height') {
+                return [`${singleDayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
+              }
+              return [value, name];
+            }}
+            contentStyle={{ 
+              backgroundColor: 'white', 
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px'
+            }}
+          />
           <Bar dataKey="height" radius={[4, 4, 0, 0]}>
             {singleDayStatusData.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
@@ -254,17 +238,19 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 <BarChart data={dayStatusData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" angle={0} height={50} />
-                  <Tooltip
-  formatter={(value, name, props) => {
-    const avg = props.payload.avgSpeed;
-    return [`${avg} km/h`, '平均速度'];
-  }}
-  contentStyle={{
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px'
-  }}
-/>
+                  <Tooltip 
+                    formatter={(value, name) => {
+                      if (name === 'height') {
+                        return [`${dayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
+                      }
+                      return [value, name];
+                    }}
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
+                    }}
+                  />
                   <Bar dataKey="height" radius={[3, 3, 0, 0]}>
                     {dayStatusData.map((entry, j) => (
                       <Cell key={j} fill={entry.color} />
@@ -281,38 +267,25 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   </div>
 )}
 
-      
-
-      {/* Vehicle Type Distribution */}
+      {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                labelLine={true}
-                label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
                 outerRadius="80%"
-                innerRadius="40%"
                 dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
               >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                {pieData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend />
+              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         </div>
