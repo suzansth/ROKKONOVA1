@@ -326,6 +326,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
       {/* テーブル */}
       <TrafficDataTable data={data} className="mt-8" />
+        </div>
+      </div>
     </div>
   );
 };
