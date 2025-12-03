@@ -4,6 +4,7 @@ import {
   PieChart, Pie, Cell, Legend, BarChart, Bar, LabelList
 } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTrafficData } from '../hooks/useApi';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import TrafficDataTable from './TrafficDataTable';
@@ -26,12 +27,21 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   // ====== ステート ======
   const [currentPage, setCurrentPage] = React.useState(0);
 
-  const data = csvData || [];
-  const loading = false;
-  const error = undefined;
+  // ====== データ取得 ======
+  const { data, loading, error } = useTrafficData(
+    selectedDate,
+    csvData,
+    isUsingCsv,
+    startDate,
+    endDate,
+    isRangeMode
+  );
+
 
   // ====== 時間帯別データ（単日用） ======
   const hourlyData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const grouped: Record<string, { totalSpeed: number; count: number }> = {};
     data.forEach(item => {
       const hour = item.timestamp.split(' ')[1].split(':')[0];
@@ -50,6 +60,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
   // ====== 期間選択時の日別データ ======
   const dailyTrafficData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const groupedByDate: Record<string, TrafficData[]> = {};
     data.forEach(item => {
       const date = item.timestamp.split(' ')[0];
@@ -76,6 +88,43 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     }).sort((a, b) => a.date.localeCompare(b.date));
   }, [data]);
 
+  // ====== 折れ線グラフ用データ ======
+  const timeSeriesData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
+    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
+    data.forEach(item => {
+      const hour = item.timestamp.split(' ')[1].split(':')[0];
+      const timeKey = `${hour}:00`;
+      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
+      grouped[timeKey].vehicleCount += 1;
+      grouped[timeKey].totalSpeed += item.speed_kmh;
+      grouped[timeKey].speedCount += 1;
+    });
+    return Object.entries(grouped)
+      .map(([time, data]) => ({
+        time,
+        count: data.vehicleCount,
+        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [data]);
+
+  // ====== 円グラフ用データ ======
+  const pieData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
+    const vehicleTypeData = data.reduce((acc, item) => {
+      acc[item.class_name] = (acc[item.class_name] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(vehicleTypeData).map(([type, count]) => ({
+      name: type,
+      value: count
+    }));
+  }, [data]);
+
   // ====== ページネーション ======
   const daysPerPage = 7;
   const totalPages = Math.ceil(dailyTrafficData.length / daysPerPage);
@@ -96,37 +145,6 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     ...item,
     ...getTrafficStatus(item.avgSpeed),
     height: 100
-  }));
-
-  // ====== 折れ線グラフ用 ======
-  const aggregateHourlyData = (data: TrafficData[]) => {
-    const grouped: Record<string, { vehicleCount: number; totalSpeed: number; speedCount: number }> = {};
-    data.forEach(item => {
-      const hour = item.timestamp.split(' ')[1].split(':')[0];
-      const timeKey = `${hour}:00`;
-      if (!grouped[timeKey]) grouped[timeKey] = { vehicleCount: 0, totalSpeed: 0, speedCount: 0 };
-      grouped[timeKey].vehicleCount += 1;
-      grouped[timeKey].totalSpeed += item.speed_kmh;
-      grouped[timeKey].speedCount += 1;
-    });
-    return Object.entries(grouped)
-      .map(([time, data]) => ({
-        time,
-        count: data.vehicleCount,
-        speed: Math.round((data.totalSpeed / data.speedCount) * 10) / 10
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time));
-  };
-  const timeSeriesData = aggregateHourlyData(data);
-
-  // ====== 円グラフ用 ======
-  const vehicleTypeData = data.reduce((acc, item) => {
-    acc[item.class_name] = (acc[item.class_name] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const pieData = Object.entries(vehicleTypeData).map(([type, count]) => ({
-    name: type,
-    value: count
   }));
 
   // ====== ローディング・エラーハンドリング ======
@@ -304,14 +322,12 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
 
         {/* テーブル */}
         <div>
-          <TrafficDataTable data={data} className="mt-8" />
-        </div>
-
-      </div>
 
 
       {/* テーブル */}
       <TrafficDataTable data={data} className="mt-8" />
+        </div>
+      </div>
     </div>
   );
 };
