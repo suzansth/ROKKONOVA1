@@ -241,6 +241,43 @@ const usagePieData = [
         </div>
       </div>
 
+       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+        {/* Regional Distribution */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <Pie
+                data={regionPieData}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                outerRadius="80%"
+                innerRadius="40%"
+                fill="#8884d8"
+                dataKey="value"
+                stroke="#fff"
+                strokeWidth={2}
+              >
+                {regionPieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px'
+                }}
+              />
+              <Legend />
+            </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
     </div>
