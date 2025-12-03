@@ -277,6 +277,7 @@ const usagePieData = [
             </ResponsiveContainer>
           </div>
         </div>
+         <div>`
 
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
