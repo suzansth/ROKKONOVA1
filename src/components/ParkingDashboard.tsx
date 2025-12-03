@@ -268,37 +268,33 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 
         <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <Pie
-                  data={regionPieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                  outerRadius="80%"
-                  innerRadius="40%"
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {regionPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <div className="bg-white shadow p-6 rounded-xl w-full flex justify-center items-center">
+  <ResponsiveContainer width={300} height={300}>
+    <PieChart>
+      <Pie
+        data={data}
+        dataKey="value"
+        nameKey="name"
+        cx="50%"
+        cy="50%"
+        outerRadius={100}
+        innerRadius={60}
+        label
+      >
+        {data.map((entry, index) => (
+          <Cell key={index} fill={COLORS[index % COLORS.length]} />
+        ))}
+      </Pie>
+      <Tooltip />
+      <Legend
+        verticalAlign="bottom"
+        height={36}
+        wrapperStyle={{ paddingTop: "20px" }}
+      />
+    </PieChart>
+  </ResponsiveContainer>
+</div>
+
         </div>
 
       </div>
