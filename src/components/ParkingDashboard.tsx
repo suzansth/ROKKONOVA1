@@ -233,31 +233,34 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </div>
 
       {/* === 用途別構成比 === */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
-        <div className="h-80">
-              <div className="w-[320px] h-[320px]">
+<div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+  <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
+
+  <div className="flex justify-center">
+    <div className="w-[320px] h-[320px]">
       <PieChart width={320} height={320}>
-                data={usagePieData}
-                cx="50%"
-                cy="50%"
-                outerRadius="80%"
-                innerRadius="40%"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-              >
-                {usagePieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+        <Pie
+          data={usagePieData}
+          cx="50%"
+          cy="50%"
+          outerRadius="80%"
+          innerRadius="40%"
+          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+          dataKey="value"
+          stroke="#fff"
+          strokeWidth={2}
+        >
+          {usagePieData.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+    </div>
+  </div>
+
+</div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
