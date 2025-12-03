@@ -124,68 +124,58 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     timeSeriesData = aggregateHourlyData(data);
   }
 
-// === かな分類テーブル ===
-const commercialKana = ['あ','い','う','え','お','か','き','く','け','こ'];
-const privateKana = [
-  'さ','し','す','せ','そ','た','ち','つ','て','と',
-  'な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ',
-  'ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ'
-];
-const rentalKana = ['わ','れ'];  // レンタカー
-const militaryKana = ['よ'];      // 駐留軍人車両
-const militaryAlpha = ['E','H','K','M','T','Y']; // 英字
+  // === かな分類 ===
+  const commercialKana = ['あ','い','う','え','お','か','き','く','け','こ'];
+  const privateKana = [
+    'さ','し','す','せ','そ','た','ち','つ','て','と',
+    'な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ',
+    'ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ'
+  ];
+  const rentalKana = ['わ','れ'];
+  const militaryKana = ['よ'];
+  const militaryAlpha = ['E','H','K','M','T','Y'];
 
-// === 用途分類カウンター ===
-const usageDataMap = {
-  private: 0,
-  commercial: 0,
-  rental: 0,
-  military: 0
-};
+  const usageDataMap = {
+    private: 0,
+    commercial: 0,
+    rental: 0,
+    military: 0
+  };
 
-// === 用途分類ロジック ===
-data.forEach((item) => {
-  const kana = item.kana;
+  data.forEach((item) => {
+    const kana = item.kana;
+    let type = 'private';
 
-  let type = 'private';
+    if (!kana) return;
 
-  if (!kana) {
-    return; // データに kana が無い場合はスキップ
-  }
+    if (militaryAlpha.includes(kana.toUpperCase())) type = 'military';
+    else if (militaryKana.includes(kana)) type = 'military';
+    else if (rentalKana.includes(kana)) type = 'rental';
+    else if (commercialKana.includes(kana)) type = 'commercial';
+    else if (privateKana.includes(kana)) type = 'private';
 
-  // 軍用車（アルファベットの場合）
-  if (militaryAlpha.includes(kana.toUpperCase())) {
-    type = 'military';
-  }
-  // 軍用車（ひらがな "よ"）
-  else if (militaryKana.includes(kana)) {
-    type = 'military';
-  }
-  // レンタカー
-  else if (rentalKana.includes(kana)) {
-    type = 'rental';
-  }
-  // 商用車
-  else if (commercialKana.includes(kana)) {
-    type = 'commercial';
-  }
-  // 自家用車
-  else if (privateKana.includes(kana)) {
-    type = 'private';
-  }
+    usageDataMap[type]++;
+  });
 
-  usageDataMap[type]++;
-});
+  const usagePieData = [
+    { name: '自家用車', value: usageDataMap.private },
+    { name: '商用車', value: usageDataMap.commercial },
+    { name: 'レンタカー', value: usageDataMap.rental },
+    { name: 'その他', value: usageDataMap.military },
+  ];
 
-// === 円グラフデータ ===
-const usagePieData = [
-  { name: '自家用車', value: usageDataMap.private },
-  { name: '商用車', value: usageDataMap.commercial },
-  { name: 'レンタカー', value: usageDataMap.rental },
-  { name: 'その他', value: usageDataMap.military },
-];
+  // === 地域集計 ===
+  const regionCount: Record<string, number> = {};
+  data.forEach((item) => {
+    const region = item.city || '不明';
+    if (!regionCount[region]) regionCount[region] = 0;
+    regionCount[region]++;
+  });
 
-
+  const regionPieData = Object.entries(regionCount).map(([name, value]) => ({
+    name,
+    value,
+  }));
 
   return (
     <div className="space-y-8">
@@ -204,7 +194,6 @@ const usagePieData = [
               <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
-
               <Line yAxisId="left" type="monotone" dataKey="entry" stroke="#3B82F6" strokeWidth={3} name="入庫数" />
               <Line yAxisId="left" type="monotone" dataKey="exit" stroke="#10B981" strokeWidth={3} name="出庫数" />
               <Line yAxisId="right" type="monotone" dataKey="occupancy" stroke="#F59E0B" strokeWidth={3} name="満車率 (%)" />
@@ -241,47 +230,50 @@ const usagePieData = [
         </div>
       </div>
 
-       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-        {/* Regional Distribution */}
+      {/* === 地域別構成比 === */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+
         <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <Pie
-                data={regionPieData}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                outerRadius="80%"
-                innerRadius="40%"
-                fill="#8884d8"
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-              >
-                {regionPieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px'
-                }}
-              />
-              <Legend />
-            </PieChart>
+                <Pie
+                  data={regionPieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                  outerRadius="80%"
+                  innerRadius="40%"
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {regionPieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
-        
+
+      </div> {/* grid の閉じ */}
 
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
-    </div>
+
+    </div>  {/* space-y-8 の閉じ */}
   );
 };
 
