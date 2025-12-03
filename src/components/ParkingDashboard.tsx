@@ -268,12 +268,13 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           </div>
         </div>
 
-      </div> {/* grid の閉じ */}
+        </div>
 
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
 
-    </div>  {/* space-y-8 の閉じ */}
+      {/* space-y-8 の閉じ */}
+    </div>
   );
 };
 
