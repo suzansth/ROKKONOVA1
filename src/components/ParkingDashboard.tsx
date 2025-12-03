@@ -240,8 +240,8 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
               <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                 <Pie
                   data={regionPieData}
-                  cx="100%"
-                  cy="100%"
+                  cx="60%"
+                  cy="60%"
                   labelLine={true}
                   label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
                   outerRadius="80%"
