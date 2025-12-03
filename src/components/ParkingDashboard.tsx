@@ -10,7 +10,9 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  BarChart,
+  Bar
 } from 'recharts';
 import { useParkingData } from '../hooks/useApi';
 import { ParkingData } from '../types';
@@ -177,6 +179,34 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     value,
   }));
 
+  // === 滞在時間データ ===
+  const stayDurationData = [
+    { hour: '00:00', avgDuration: 120 },
+    { hour: '01:00', avgDuration: 110 },
+    { hour: '02:00', avgDuration: 105 },
+    { hour: '03:00', avgDuration: 100 },
+    { hour: '04:00', avgDuration: 95 },
+    { hour: '05:00', avgDuration: 90 },
+    { hour: '06:00', avgDuration: 85 },
+    { hour: '07:00', avgDuration: 80 },
+    { hour: '08:00', avgDuration: 75 },
+    { hour: '09:00', avgDuration: 70 },
+    { hour: '10:00', avgDuration: 65 },
+    { hour: '11:00', avgDuration: 60 },
+    { hour: '12:00', avgDuration: 55 },
+    { hour: '13:00', avgDuration: 50 },
+    { hour: '14:00', avgDuration: 45 },
+    { hour: '15:00', avgDuration: 40 },
+    { hour: '16:00', avgDuration: 35 },
+    { hour: '17:00', avgDuration: 30 },
+    { hour: '18:00', avgDuration: 35 },
+    { hour: '19:00', avgDuration: 40 },
+    { hour: '20:00', avgDuration: 45 },
+    { hour: '21:00', avgDuration: 50 },
+    { hour: '22:00', avgDuration: 60 },
+    { hour: '23:00', avgDuration: 80 }
+  ];
+
   return (
     <div className="space-y-8">
 
@@ -203,72 +233,71 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </div>
 
       {/* === 用途別構成比 === */}
+<div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+  <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
+
+  <div className="flex justify-center">
+    <div className="w-[320px] h-[320px]">
+      <PieChart width={320} height={320}>
+        <Pie
+          data={usagePieData}
+          cx="50%"
+          cy="50%"
+          outerRadius="80%"
+          innerRadius="40%"
+          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+          dataKey="value"
+          stroke="#fff"
+          strokeWidth={2}
+        >
+          {usagePieData.map((_, i) => (
+            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+    </div>
+  </div>
+
+</div>
+
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={usagePieData}
-                cx="50%"
-                cy="50%"
-                outerRadius="80%"
-                innerRadius="40%"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-              >
-                {usagePieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+  <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
 
-      {/* === 地域別構成比 === */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+  <div className="flex justify-center">
+    <div className="w-[320px] h-[320px]">
+      <PieChart width={320} height={320}>
+        <Pie
+          data={regionPieData}
+          cx="50%"
+          cy="50%"
+          outerRadius="80%"
+          innerRadius="40%"
+          labelLine
+          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+          dataKey="value"
+          stroke="#fff"
+          strokeWidth={2}
+        >
+          {regionPieData.map((entry, index) => (
+            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <Pie
-                  data={regionPieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                  outerRadius="80%"
-                  innerRadius="40%"
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {regionPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "white",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+          }}
+        />
+        <Legend />
+      </PieChart>
+    </div>
+  </div>
 
-        </div>
+</div>
 
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
