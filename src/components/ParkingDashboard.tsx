@@ -235,66 +235,67 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       {/* === 用途別構成比 === */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
-       <div className="bg-white shadow p-6 rounded-xl w-full flex justify-center items-center">
-  <ResponsiveContainer width={300} height={300}>
-    <PieChart>
-      <Pie
-        data={data}
-        dataKey="value"
-        nameKey="name"
-        cx="50%"
-        cy="50%"
-        outerRadius={100}
-        innerRadius={60}
-        label
-      >
-        {data.map((entry, index) => (
-          <Cell key={index} fill={COLORS[index % COLORS.length]} />
-        ))}
-      </Pie>
-      <Tooltip />
-      <Legend
-        verticalAlign="bottom"
-        height={36}
-        wrapperStyle={{ paddingTop: "20px" }}
-      />
-    </PieChart>
-  </ResponsiveContainer>
-</div>
-
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={usagePieData}
+                cx="50%"
+                cy="50%"
+                outerRadius="80%"
+                innerRadius="40%"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                dataKey="value"
+                stroke="#fff"
+                strokeWidth={2}
+              >
+                {usagePieData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
         <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
-          <div className="bg-white shadow p-6 rounded-xl w-full flex justify-center items-center">
-  <ResponsiveContainer width={300} height={300}>
-    <PieChart>
-      <Pie
-        data={data}
-        dataKey="value"
-        nameKey="name"
-        cx="50%"
-        cy="50%"
-        outerRadius={100}
-        innerRadius={60}
-        label
-      >
-        {data.map((entry, index) => (
-          <Cell key={index} fill={COLORS[index % COLORS.length]} />
-        ))}
-      </Pie>
-      <Tooltip />
-      <Legend
-        verticalAlign="bottom"
-        height={36}
-        wrapperStyle={{ paddingTop: "20px" }}
-      />
-    </PieChart>
-  </ResponsiveContainer>
-</div>
-
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+              
+                <Pie
+                  data={regionPieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
+                  outerRadius="80%"
+                  innerRadius="40%"
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {regionPieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
       </div>
