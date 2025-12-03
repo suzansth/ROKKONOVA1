@@ -10,7 +10,9 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  BarChart,
+  Bar
 } from 'recharts';
 import { useParkingData } from '../hooks/useApi';
 import { ParkingData } from '../types';
@@ -177,6 +179,34 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     value,
   }));
 
+  // === 滞在時間データ ===
+  const stayDurationData = [
+    { hour: '00:00', avgDuration: 120 },
+    { hour: '01:00', avgDuration: 110 },
+    { hour: '02:00', avgDuration: 105 },
+    { hour: '03:00', avgDuration: 100 },
+    { hour: '04:00', avgDuration: 95 },
+    { hour: '05:00', avgDuration: 90 },
+    { hour: '06:00', avgDuration: 85 },
+    { hour: '07:00', avgDuration: 80 },
+    { hour: '08:00', avgDuration: 75 },
+    { hour: '09:00', avgDuration: 70 },
+    { hour: '10:00', avgDuration: 65 },
+    { hour: '11:00', avgDuration: 60 },
+    { hour: '12:00', avgDuration: 55 },
+    { hour: '13:00', avgDuration: 50 },
+    { hour: '14:00', avgDuration: 45 },
+    { hour: '15:00', avgDuration: 40 },
+    { hour: '16:00', avgDuration: 35 },
+    { hour: '17:00', avgDuration: 30 },
+    { hour: '18:00', avgDuration: 35 },
+    { hour: '19:00', avgDuration: 40 },
+    { hour: '20:00', avgDuration: 45 },
+    { hour: '21:00', avgDuration: 50 },
+    { hour: '22:00', avgDuration: 60 },
+    { hour: '23:00', avgDuration: 80 }
+  ];
+
   return (
     <div className="space-y-8">
 
@@ -302,3 +332,11 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           </ResponsiveContainer>
         </div>
       </div>
+
+      </div>
+      </div>
+    </div>
+  );
+};
+
+export default ParkingDashboard;
