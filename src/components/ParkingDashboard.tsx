@@ -234,6 +234,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           </ResponsiveContainer>
         </div>
       </div>
+      
 
       {/* === 用途別構成比 === */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
@@ -280,6 +281,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
     {/* ← width を広げる / height も大きめにする */}
+      <div className="flex justify-center">
     <div className="w-[800px] h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
@@ -317,6 +319,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </ResponsiveContainer>
     </div>
   </div>
+       </div>
 
 
 
