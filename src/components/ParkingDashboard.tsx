@@ -305,7 +305,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </ResponsiveContainer>
     </div>
   </div>
-</div>
+
 
 
       {/* === テーブル === */}
