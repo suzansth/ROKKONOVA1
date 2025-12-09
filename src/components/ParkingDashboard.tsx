@@ -268,7 +268,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       {/* === ナンバープレート地域別構成 === */}
     <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
     {/* ← width を広げる / height も大きめにする */}
-    <div className="w-[320px] h-[300px]">
+    <div className="w-[5400px] h-[3500px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
