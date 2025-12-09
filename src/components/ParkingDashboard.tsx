@@ -270,6 +270,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           />
               <Legend />
             </PieChart>
+                 </ResponsiveContainer>
           </div>
         </div>
       
