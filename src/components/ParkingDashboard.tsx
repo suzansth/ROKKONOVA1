@@ -240,7 +240,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
         <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
 
         <div className="flex justify-center">
-          <div className="w-[480px] h-[480px]">
+          <div className="w-[3200px] h-[320px]">
             <PieChart width={320} height={320}>
               <Pie
                 data={usagePieData}
