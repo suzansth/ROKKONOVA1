@@ -330,14 +330,15 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 outerRadius="80%"
                 innerRadius="40"
                 
-                dataKey="value"
-                 stroke="#fff"
-                strokeWidth={2}
+                
                 label={({ name, percent }) =>
               `${name} ${(percent * 100).toFixed(1)}%`}
                 {pieData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
+                dataKey="value"
+                 stroke="#fff"
+                strokeWidth={2}
               </Pie>
              <Tooltip
             contentStyle={{
