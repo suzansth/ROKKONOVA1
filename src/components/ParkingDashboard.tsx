@@ -270,8 +270,8 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       <PieChart width={320} height={320}>
         <Pie
           data={regionPieData}
-          cx="50%"
-          cy="50%"
+          cx="40%"
+          cy="40%"
           outerRadius="80%"
           innerRadius="40%"
           labelLine
