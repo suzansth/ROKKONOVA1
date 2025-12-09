@@ -323,7 +323,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     車種別構成比
   </h3>
 
-  <div className="w-[800px] h-[320px]">
+  <div className="w-[1000px] h-[320px]">
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
