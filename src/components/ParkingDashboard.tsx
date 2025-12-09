@@ -238,7 +238,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 
   <div className="flex justify-center">
     <div className="w-[320px] h-[320px]">
-      <PieChart width={480} height={350}>
+      <PieChart width={480} height={450}>
         <Pie
           data={usagePieData}
           cx="50%"
