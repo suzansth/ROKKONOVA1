@@ -345,9 +345,10 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
               border: "1px solid #e5e7eb",
               borderRadius: "8px",
             }}
+               <Legend />
             </PieChart>
           </ResponsiveContainer>
-        <Legend />
+        
         </div>
       </div>
 
