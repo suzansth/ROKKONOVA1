@@ -320,7 +320,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
-        <div className="h-80">
+        <div className="w-[800px] h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -328,16 +328,26 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
                 cx="50%"
                 cy="50%"
                 outerRadius="80%"
+                innerRadius="40"
+                
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-              >
+                 stroke="#fff"
+                strokeWidth={2}
+                label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(1)}%`}
                 {pieData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+             <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+            }}
             </PieChart>
           </ResponsiveContainer>
+        <Legend />
         </div>
       </div>
 
