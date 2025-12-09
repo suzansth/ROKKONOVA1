@@ -182,83 +182,131 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
       )}
 
       {/* 日別 or 単日グラフ */}
-      {!isRangeMode ? (
+          {!isRangeMode ? (
   // --- 単日表示 ---
   <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-    <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
-    <div className="h-32">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={singleDayStatusData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="hour" tick={{ fontSize: 12 }} angle={0} textAnchor="end" height={60} />
-          <Tooltip 
-            formatter={(value, name) => {
-              if (name === 'height') {
-                return [`${singleDayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
-              }
-              return [value, name];
-            }}
-            contentStyle={{ 
-              backgroundColor: 'white', 
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px'
-            }}
-          />
-          <Bar dataKey="height" radius={[4, 4, 0, 0]}>
-            {singleDayStatusData.map((entry, i) => (
-              <Cell key={i} fill={entry.color} />
+    <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            🚥 スマート交通判定
+            {!isRangeMode && selectedDate && (
+              <span className="ml-3 text-base text-gray-500 font-normal">({selectedDate})</span>
+            )}
+          </h3>
+    <div className="overflow-x-auto">
+      <table className="min-w-full border-collapse border border-gray-300">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-2 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">時間</th>
+            {singleDayStatusData.map((item, index) => (
+              <th key={index} className="px-2 py-2 border border-gray-300 text-center text-sm font-medium text-gray-700">
+                {item.hour}
+              </th>
             ))}
-            <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="bg-gray-50">
+            <td className="px-2 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">データバー</td>
+            {(() => {
+              const maxSpeed = 60; // 基準値を60km/hに固定
+              return singleDayStatusData.map((item, index) => (
+                <td key={index} className="px-2 py-2 border border-gray-300 align-bottom">
+                  <div className="h-20 w-5 mx-auto bg-gray-200 rounded-t-md flex items-end">
+                    <div
+                      className="w-full rounded-t-md"
+                      style={{
+                        height: `${(Math.min(item.avgSpeed, maxSpeed) / maxSpeed) * 100}%`,
+                        backgroundColor: item.color,
+                      }}
+                    ></div>
+                  </div>
+                </td>
+              ));
+            })()}
+          </tr>
+          <tr className="bg-white">
+            <td className="px-2 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">交通状況</td>
+            {singleDayStatusData.map((item, index) => (
+              <td key={index} className="px-2 py-2 border border-gray-300 text-center text-xl">
+                <span style={{ color: item.color }}>{item.status}</span>
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-gray-50">
+            <td className="px-2 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">平均速度(km/h)</td>
+            {singleDayStatusData.map((item, index) => (
+              <td key={index} className="px-2 py-2 border border-gray-300 text-center text-sm text-gray-600">
+                {item.avgSpeed}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 ) : (
   // --- 期間モード（複数日）---
   <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-    {/* ✅ タイトルはここに1回だけ表示 */}
-    <h3 className="text-lg font-semibold text-gray-900 mb-6">スマート交通判定</h3>
-
-    {/* ✅ グラフを縦1列で並べる */}
-    <div className="flex flex-col space-y-6">
+    <h3 className="text-lg font-semibold text-gray-900 mb-6">🚥 スマート交通判定</h3>
+    <div className="space-y-8">
       {currentDays.map((dayData, i) => {
         const dayStatusData = dayData.hourlyData.map(item => ({
           ...item,
           ...getTrafficStatus(item.avgSpeed),
-          height: 100,
         }));
-
+ 
         return (
           <div key={i} className="border rounded-lg p-4">
-            {/* 各日付タイトルのみ個別に表示 */}
-            <h4 className="text-md font-medium mb-3">{dayData.date}</h4>
-            <div className="h-24">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dayStatusData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" angle={0} height={50} />
-                  <Tooltip 
-                    formatter={(value, name) => {
-                      if (name === 'height') {
-                        return [`${dayStatusData.find(item => item.height === value)?.avgSpeed || 0} km/h`, '平均速度'];
-                      }
-                      return [value, name];
-                    }}
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar dataKey="height" radius={[3, 3, 0, 0]}>
-                    {dayStatusData.map((entry, j) => (
-                      <Cell key={j} fill={entry.color} />
+            <h4 className="text-md font-medium mb-4">{dayData.date}</h4>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-1 py-2 border border-gray-300 text-left text-xs font-medium text-gray-700">時間</th>
+                    {dayStatusData.map((item, index) => (
+                      <th key={index} className="px-1 py-2 border border-gray-300 text-center text-xs font-medium text-gray-700">
+                        {item.hour}
+                      </th>
                     ))}
-                    <LabelList dataKey="avgSpeed" position="center" fill="#fff" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-gray-50">
+                    <td className="px-1 py-2 border border-gray-300 text-left text-xs font-medium text-gray-700">データバー</td>
+                    {(() => {
+                      const maxSpeed = 60; // 基準値を60km/hに固定
+                      return dayStatusData.map((item, index) => (
+                        <td key={index} className="px-1 py-2 border border-gray-300 align-bottom">
+                          <div className="h-16 w-4 mx-auto bg-gray-200 rounded-t-sm flex items-end">
+                            <div
+                              className="w-full rounded-t-sm"
+                              style={{
+                                height: `${(Math.min(item.avgSpeed, maxSpeed) / maxSpeed) * 100}%`,
+                                backgroundColor: item.color,
+                              }}
+                            ></div>
+                          </div>
+                        </td>
+                      ));
+                    })()}
+                  </tr>
+                  <tr className="bg-white">
+                    <td className="px-1 py-2 border border-gray-300 text-left text-xs font-medium text-gray-700">交通状況</td>
+                    {dayStatusData.map((item, index) => (
+                      <td key={index} className="px-1 py-2 border border-gray-300 text-center text-lg">
+                        <span style={{ color: item.color }}>{item.status}</span>
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td className="px-1 py-2 border border-gray-300 text-left text-xs font-medium text-gray-700">平均速度(km/h)</td>
+                    {dayStatusData.map((item, index) => (
+                      <td key={index} className="px-1 py-2 border border-gray-300 text-center text-xs text-gray-600">
+                        {item.avgSpeed}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         );
@@ -266,6 +314,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     </div>
   </div>
 )}
+ 
+ 
 
       {/* 円グラフ */}
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
