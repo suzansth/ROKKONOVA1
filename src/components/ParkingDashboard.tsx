@@ -261,7 +261,13 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+            }}
+          />
               <Legend />
             </PieChart>
           </div>
