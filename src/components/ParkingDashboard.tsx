@@ -250,7 +250,9 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
                 outerRadius="80%"
                 innerRadius="40%"
                 labelLine
-                label={renderCustomizedLabel}
+                 label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(1)}%`
+            }
                 dataKey="value"
                 stroke="#fff"
                 strokeWidth={2}
