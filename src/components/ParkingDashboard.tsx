@@ -266,41 +266,47 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </div>
 
       {/* === ナンバープレート地域別構成 === */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
-
-        <div className="flex justify-center">
-          <div className="w-[320px] h-[3200px]">
-            <PieChart width={320} height={320}>
-              <Pie
-                data={regionPieData}
-                cx="50%"
-                cy="50%"
-                outerRadius="80%"
-                innerRadius="40%"
-                labelLine
-                label={renderCustomizedLabel}
-                dataKey="value"
-                stroke="#fff"
-                strokeWidth={2}
-              >
-                {regionPieData.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                }}
+    <div className="flex justify-center">
+    {/* ← width を広げる / height も大きめにする */}
+    <div className="w-[480px] h-[480px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={regionPieData}
+            cx="50%"
+            cy="50%"
+            outerRadius="80%"
+            innerRadius="40%"
+            labelLine
+            label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(1)}%`
+            }
+            dataKey="value"
+            stroke="#fff"
+            strokeWidth={2}
+          >
+            {regionPieData.map((entry, index) => (
+              <Cell
+                key={index}
+                fill={COLORS[index % COLORS.length]}
               />
-              <Legend />
-            </PieChart>
-          </div>
-        </div>
-      </div>
+            ))}
+          </Pie>
+
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+            }}
+          />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+</div>
+
 
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
