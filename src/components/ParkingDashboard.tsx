@@ -31,6 +31,34 @@ interface ParkingDashboardProps {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  name
+}) => {
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius + 20; 
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#333"
+      fontSize={12}
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+    >
+      {`${name} ${(percent * 100).toFixed(1)}%`}
+    </text>
+  );
+};
+
 const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   selectedDate,
   csvData,
