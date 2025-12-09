@@ -239,7 +239,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
 
-        <div className="flex justify-center">
+        
           <div className="w-[320px] h-[320px]">
             <PieChart width={320} height={320}>
               <Pie
@@ -263,7 +263,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
             </PieChart>
           </div>
         </div>
-      </div>
+      
 
       {/* === ナンバープレート地域別構成 === */}
     <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
