@@ -322,7 +322,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   <h3 className="text-lg font-semibold text-gray-900 mb-6">
     車種別構成比
   </h3>
-<div className="flex justify-center">s
+<div className="flex justify-center">
   <div cassName="w-[900px] h-[320px]">
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
@@ -357,6 +357,7 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
     </ResponsiveContainer>
   </div>
 </div>
+  </div>
 
       {/* テーブル */}
       <TrafficDataTable data={data} className="mt-8" />
