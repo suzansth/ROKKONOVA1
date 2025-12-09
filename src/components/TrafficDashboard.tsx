@@ -322,8 +322,8 @@ const TrafficDashboard: React.FC<TrafficDashboardProps> = ({
   <h3 className="text-lg font-semibold text-gray-900 mb-6">
     車種別構成比
   </h3>
-
-  <div className="w-[900px] h-[320px]">
+<div className="flex justify-center">s
+  <div cassName="w-[900px] h-[320px]">
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
