@@ -241,7 +241,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 
         
           <div className="w-[800px] h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={usagePieData}
