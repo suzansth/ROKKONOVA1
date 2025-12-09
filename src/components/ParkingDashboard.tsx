@@ -31,6 +31,37 @@ interface ParkingDashboardProps {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
+/* ===========================================================
+   円グラフのカスタムラベル（円の外側にラベルを描画）
+   =========================================================== */
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  name
+}) => {
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius + 20; 
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#333"
+      fontSize={12}
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+    >
+      {`${name} ${(percent * 100).toFixed(1)}%`}
+    </text>
+  );
+};
+
 const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
   selectedDate,
   csvData,
@@ -64,7 +95,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     );
   }
 
-  // === 1時間ごとの集計 ===
+  /* === 1時間ごとの集計 === */
   const aggregateHourlyData = (data: ParkingData[]) => {
     const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
     data.forEach((item) => {
@@ -89,7 +120,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // === 日ごとの集計 ===
+  /* === 日ごとの集計 === */
   const aggregateDailyData = (data: ParkingData[]) => {
     const grouped: Record<string, { entry: number; exit: number; total: number }> = {};
     data.forEach((item) => {
@@ -114,7 +145,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // === 時系列データ ===
+  /* === 時系列データ === */
   let timeSeriesData;
   if (isRangeMode && startDate && endDate) {
     const diff =
@@ -126,7 +157,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     timeSeriesData = aggregateHourlyData(data);
   }
 
-  // === かな分類 ===
+  /* === かな分類 === */
   const commercialKana = ['あ','い','う','え','お','か','き','く','け','こ'];
   const privateKana = [
     'さ','し','す','せ','そ','た','ち','つ','て','と',
@@ -154,7 +185,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     else if (militaryKana.includes(kana)) type = 'military';
     else if (rentalKana.includes(kana)) type = 'rental';
     else if (commercialKana.includes(kana)) type = 'commercial';
-    else if (privateKana.includes(kana)) type = 'private';
+    else type = 'private';
 
     usageDataMap[type]++;
   });
@@ -166,7 +197,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     { name: 'その他', value: usageDataMap.military },
   ];
 
-  // === 地域集計 ===
+  /* === 地域集計 === */
   const regionCount: Record<string, number> = {};
   data.forEach((item) => {
     const region = item.city || '不明';
@@ -178,34 +209,6 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
     name,
     value,
   }));
-
-  // === 滞在時間データ ===
-  const stayDurationData = [
-    { hour: '00:00', avgDuration: 120 },
-    { hour: '01:00', avgDuration: 110 },
-    { hour: '02:00', avgDuration: 105 },
-    { hour: '03:00', avgDuration: 100 },
-    { hour: '04:00', avgDuration: 95 },
-    { hour: '05:00', avgDuration: 90 },
-    { hour: '06:00', avgDuration: 85 },
-    { hour: '07:00', avgDuration: 80 },
-    { hour: '08:00', avgDuration: 75 },
-    { hour: '09:00', avgDuration: 70 },
-    { hour: '10:00', avgDuration: 65 },
-    { hour: '11:00', avgDuration: 60 },
-    { hour: '12:00', avgDuration: 55 },
-    { hour: '13:00', avgDuration: 50 },
-    { hour: '14:00', avgDuration: 45 },
-    { hour: '15:00', avgDuration: 40 },
-    { hour: '16:00', avgDuration: 35 },
-    { hour: '17:00', avgDuration: 30 },
-    { hour: '18:00', avgDuration: 35 },
-    { hour: '19:00', avgDuration: 40 },
-    { hour: '20:00', avgDuration: 45 },
-    { hour: '21:00', avgDuration: 50 },
-    { hour: '22:00', avgDuration: 60 },
-    { hour: '23:00', avgDuration: 80 }
-  ];
 
   return (
     <div className="space-y-8">
@@ -231,78 +234,98 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           </ResponsiveContainer>
         </div>
       </div>
+      
 
       {/* === 用途別構成比 === */}
-<div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-  <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
-
-  <div className="flex justify-center">
-    <div className="w-[320px] h-[320px]">
-      <PieChart width={320} height={320}>
-        <Pie
-          data={usagePieData}
-          cx="50%"
-          cy="50%"
-          outerRadius="80%"
-          innerRadius="40%"
-          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-          dataKey="value"
-          stroke="#fff"
-          strokeWidth={2}
-        >
-          {usagePieData.map((_, i) => (
-            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
-    </div>
-  </div>
-
-</div>
-
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-  <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">用途別構成比</h3>
 
-  <div className="flex justify-center">
-    <div className="w-[320px] h-[320px]">
-      <PieChart width={320} height={320}>
-        <Pie
-          data={regionPieData}
-          cx="50%"
-          cy="50%"
-          outerRadius="80%"
-          innerRadius="40%"
-          labelLine
-          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-          dataKey="value"
-          stroke="#fff"
-          strokeWidth={2}
-        >
-          {regionPieData.map((entry, index) => (
-            <Cell key={index} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
+         <div className="flex justify-center">
+          <div className="w-[800px] h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={usagePieData}
+                cx="50%"
+                cy="50%"
+                outerRadius="80%"
+                innerRadius="40%"
+                labelLine
+                 label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(1)}%`
+            }
+                dataKey="value"
+                stroke="#fff"
+                strokeWidth={2}
+              >
+                {usagePieData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+            }}
+          />
+              <Legend />
+            </PieChart>
+                 </ResponsiveContainer>
+          </div>
+        </div>
+         </div>
+      
 
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "white",
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
-          }}
-        />
-        <Legend />
-      </PieChart>
+      {/* === ナンバープレート地域別構成 === */}
+    <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
+    {/* ← width を広げる / height も大きめにする */}
+      <div className="flex justify-center">
+    <div className="w-[800px] h-[350px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={regionPieData}
+            cx="50%"
+            cy="50%"
+            outerRadius="80%"
+            innerRadius="40%"
+            labelLine
+            label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(1)}%`
+            }
+            dataKey="value"
+            stroke="#fff"
+            strokeWidth={2}
+          >
+            {regionPieData.map((entry, index) => (
+              <Cell
+                key={index}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
+
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+            }}
+          />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   </div>
+       </div>
 
-</div>
+
 
       {/* === テーブル === */}
       <ParkingDataTable data={data} className="mt-8" />
 
-      {/* space-y-8 の閉じ */}
     </div>
   );
 };
