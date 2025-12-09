@@ -243,7 +243,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
           data={usagePieData}
           cx="50%"
           cy="50%"
-          outerRadius="80%"
+          outerRadius="70%"
           innerRadius="40%"
           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
           dataKey="value"
