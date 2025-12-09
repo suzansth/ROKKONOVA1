@@ -267,7 +267,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
 
       {/* === ナンバープレート地域別構成 === */}
     <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">車種別構成比</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">ナンバープレート地域別構成</h3>
     {/* ← width を広げる / height も大きめにする */}
     <div className="w-[800px] h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
