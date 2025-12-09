@@ -266,7 +266,7 @@ const ParkingDashboard: React.FC<ParkingDashboardProps> = ({
       </div>
 
       {/* === ナンバープレート地域別構成 === */}
-    <div className="flex justify-center">
+    <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
     {/* ← width を広げる / height も大きめにする */}
     <div className="w-[540px] h-[480px]">
       <ResponsiveContainer width="100%" height="100%">
